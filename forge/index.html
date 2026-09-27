@@ -156,6 +156,8 @@
     .pill{margin-left:0;width:100%;text-align:center}
     #model{min-width:0}
   }
+
+.ref-view,.ref-paper{font-size:12px;border:1px solid #d7d9ee;border-radius:7px;padding:4px 8px;background:#fff;color:#4c46d8;text-decoration:none;cursor:pointer}.ref-view{position:absolute;right:8px;top:8px;z-index:2}.rc{position:relative}.ref-paper{display:inline-block;margin-top:8px}.ref-lb-backdrop{position:fixed;inset:0;background:rgba(8,10,24,.82)}#refLightbox{position:fixed;inset:0;z-index:50}#refLightbox[hidden]{display:none}.ref-lb-dialog{position:absolute;inset:5vh 7vw;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff}.ref-lb-img{max-width:90%;max-height:78vh;object-fit:contain;background:#fff}.ref-lb-close,.ref-lb-prev,.ref-lb-next{position:absolute;border:0;border-radius:50%;background:#fff;color:#25234b;font-size:28px;width:42px;height:42px;cursor:pointer}.ref-lb-close{right:0;top:0}.ref-lb-prev{left:0;top:45%}.ref-lb-next{right:0;top:45%}.ref-lb-meta{display:flex;gap:14px;align-items:center;flex-wrap:wrap;justify-content:center;margin-top:12px}.ref-lb-meta a,.ref-lb-pick{color:#fff;background:#4c46d8;border:0;border-radius:7px;padding:7px 11px;text-decoration:none;cursor:pointer}.ref-lb-title{max-width:55vw}
 </style>
 </head>
 <body>
@@ -175,7 +177,7 @@
     <div class="step"><span class="num">1</span>输入论文内容</div>
     <textarea id="paper" placeholder="粘贴论文标题 + 摘要（或方法概述）。例如：&#10;We propose a diffusion-based video editing framework that ... 我们的方法包含三个模块 ..."></textarea>
     <div class="row">
-      <button class="btn-ghost" id="uploadBtn">上传 PDF 自动提取</button>
+      <button class="btn-ghost" id="uploadBtn">上传 PDF 自动提取</button>      <button class="btn-ghost" id="enhancePdfBtn" hidden>用当前文本模型优化解析</button>
       <input type="file" id="pdfFile" accept="application/pdf" hidden>
       <span style="font-size:12.5px;color:var(--muted)">没有论文？试试示例：</span>
       <button class="btn-mini exchip" data-ex="robot">机器人操作</button>
@@ -492,24 +494,14 @@ function tierChip(f){
   if(f.tier==='spotlight') return '<span class="chip c-spot">Spotlight</span>';
   return '';
 }
-function renderGrid(list){
-  $('#grid').innerHTML = list.map(f=>{
-    const sel = refs.has(f.id);
-    return `<div class="rc ${sel?'sel':''}" data-id="${esc(f.id)}" role="button" tabindex="0" aria-pressed="${sel}" aria-label="${sel?'取消选择':'选择'}参考图：${esc(f.title)}">
-      <img class="thumb" loading="lazy" src="../${esc(f.image)}" alt="${esc(f.title)}">
-      <div class="pick">${sel?'✓ 已选':'+ 选为参考'}</div>
-      <div class="score">${f.matchScore!=null?f.matchScore:''}</div>
-      <div class="body">
-        <h3>${esc(f.title)}</h3>
-        <div class="chips">
-          <span class="chip c-venue">${f.venue.toUpperCase()}</span>
-          <span class="chip c-year">${f.year}</span>
-          <span class="chip c-pattern">${esc(f.pattern)}</span>
-          ${tierChip(f)}
-        </div>
-      </div></div>`;
-  }).join('');
-}
+function renderGrid(list){ $('#grid').innerHTML=list.map(f=>{const sel=refs.has(f.id);return `<div class="rc ${sel?'sel':''}" data-id="${esc(f.id)}" role="button" tabindex="0" aria-pressed="${sel}" aria-label="${sel?'取消选择':'选择'}参考图：${esc(f.title)}"><button type="button" class="ref-view" data-action="view" aria-label="查看大图">查看大图</button><img class="thumb" loading="lazy" src="../${esc(f.image)}" alt="${esc(f.title)}"><div class="pick">${sel?'✓ 已选':'+ 选为参考'}</div><div class="score">${f.matchScore!=null?f.matchScore:''}</div><div class="body"><h3>${esc(f.title)}</h3><div class="chips"><span class="chip c-venue">${f.venue.toUpperCase()}</span><span class="chip c-year">${f.year}</span><span class="chip c-pattern">${esc(f.pattern)}</span>${tierChip(f)}</div><a class="ref-paper" data-action="paper" href="${esc(f.paper||'#')}" target="_blank" rel="noopener">原文 ↗</a></div></div>`;}).join('');}
+const refLb=document.createElement('div'); refLb.id='refLightbox'; refLb.hidden=true; refLb.innerHTML='<div class="ref-lb-backdrop"></div><div class="ref-lb-dialog" role="dialog" aria-modal="true" aria-label="参考图大图"><button class="ref-lb-close" type="button">×</button><button class="ref-lb-prev" type="button">‹</button><img class="ref-lb-img"><button class="ref-lb-next" type="button">›</button><div class="ref-lb-meta"><b class="ref-lb-title"></b><a class="ref-lb-paper" target="_blank" rel="noopener">打开原文 ↗</a><button class="ref-lb-pick" type="button">选为参考</button></div></div>'; document.body.appendChild(refLb); let refLbIndex=0;
+function openRefLb(id){const i=results.findIndex(f=>f.id===id); if(i<0)return; refLbIndex=i; const f=results[i]; refLb.querySelector('.ref-lb-img').src='../'+f.image; refLb.querySelector('.ref-lb-img').alt=f.title; refLb.querySelector('.ref-lb-title').textContent=f.title; refLb.querySelector('.ref-lb-paper').href=f.paper||'#'; refLb.hidden=false; refLb.querySelector('.ref-lb-close').focus();}
+function closeRefLb(){refLb.hidden=true;}
+function stepRefLb(d){if(!results.length)return; refLbIndex=(refLbIndex+d+results.length)%results.length; openRefLb(results[refLbIndex].id);}
+$('#grid').addEventListener('click',e=>{const action=e.target.closest('[data-action]')?.dataset.action; const card=e.target.closest('.rc'); if(!card)return; if(action==='view'){e.preventDefault();e.stopPropagation();openRefLb(card.dataset.id);} else if(action==='paper'){e.stopPropagation();}});
+refLb.addEventListener('click',e=>{if(e.target.classList.contains('ref-lb-backdrop')||e.target.classList.contains('ref-lb-close'))closeRefLb(); else if(e.target.classList.contains('ref-lb-prev'))stepRefLb(-1); else if(e.target.classList.contains('ref-lb-next'))stepRefLb(1); else if(e.target.classList.contains('ref-lb-pick')){const f=results[refLbIndex]; if(f){if(!refs.has(f.id)&&refs.size<MAX_REFS)refs.add(f.id); renderGrid(results);updateCount();renderRefsStrip();}}});
+document.addEventListener('keydown',e=>{if(refLb.hidden)return;if(e.key==='Escape')closeRefLb();if(e.key==='ArrowLeft')stepRefLb(-1);if(e.key==='ArrowRight')stepRefLb(1);});
 function updateCount(){
   $('#countHint').textContent = refs.size ? `已选 ${refs.size}/${MAX_REFS}` : '';
   $('#clearBtn').hidden = refs.size===0;
@@ -565,47 +557,53 @@ $('#targetDesc').oninput = ()=>localStorage.setItem('ff_target_desc', $('#target
 })();
 
 /* ---------------- PDF extraction (pdf.js) ---------------- */
+let pdfRawText = '';
 $('#uploadBtn').onclick = ()=>$('#pdfFile').click();
-$('#pdfFile').onchange = async e=>{
-  const file = e.target.files[0]; if(!file) return;
-  const btn = $('#uploadBtn'); btn.disabled=true; btn.textContent='解析中…';
+$('#enhancePdfBtn').onclick = async ()=>{
+  const content = pdfRawText || $('#paper').value.trim();
+  const c = cfg(), key = cleanKey($('#key').value), model = $('#model').value;
+  if(!content) return showErr('请先上传可复制文字的 PDF。');
+  if(!key || !model) return showErr('请先填写 API Key 并选择文本模型；本地解析不需要 API。');
+  const btn=$('#enhancePdfBtn'); btn.disabled=true; btn.textContent='模型优化中…';
   try{
-    const buf = await file.arrayBuffer();
-    pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('vendor/pdf.worker.min.js', document.baseURI).href;
-    const pdf = await pdfjsLib.getDocument({data:buf}).promise;
-    const n = Math.min(8, pdf.numPages);
-    const p1 = await pdf.getPage(1);
-    const vp = p1.getViewport({scale:1});
-    const tc = await p1.getTextContent();
-    const top = tc.items.filter(it=>it.transform[5] > 0.6*vp.height && (it.str||'').trim());
-    let title='';
-    if(top.length){
-      const sizes={}; top.forEach(it=>sizes[it.height]=(sizes[it.height]||0)+(it.str||'').length);
-      const big = Object.keys(sizes).sort((a,b)=>b-a)[0];
-      title = top.filter(it=>String(it.height)===big).map(it=>it.str).join(' ');
-      title = title.replace(/^\s*(preprint|accepted|published|under review|arxiv|doi:?|copyright|©|\d{4}\s*ieee).*$/gim,'').trim();
-    }
-    const pages=[];
+    const prompt='从下面的 PDF 文本中提取论文标题、摘要、方法概述和关键词。去除页眉页脚、页码、目录和双栏重复。只返回 JSON：{"title":"","abstract":"","method":"","keywords":""}。不要编造原文没有的信息。\n\n'+content.slice(0,24000);
+    const body={model,temperature:0.1,max_tokens:2200,messages:[{role:'system',content:'你是严谨的论文文本解析器。'},{role:'user',content:prompt}]};
+    if($('#provider').value==='ark') body.thinking={type:'disabled'};
+    const r=await postJSON(baseURL(),'/chat/completions',body,key,undefined,120000);
+    const txt=await r.text(); if(!r.ok) throw new Error(friendlyHttp(r.status,txt));
+    const raw=JSON.parse(txt).choices?.[0]?.message?.content||'';
+    const m=raw.match(/\{[\s\S]*\}/); const j=m?JSON.parse(m[0]):{};
+    const parts=[j.title,j.abstract,j.method&&('Method excerpt: '+j.method),j.keywords&&('Keywords: '+j.keywords)].filter(x=>x&&String(x).trim());
+    if(!parts.length) throw new Error('模型未返回可用字段');
+    $('#paper').value=parts.join('\n\n').slice(0,5000); showErr('已用当前文本模型优化解析结果；请核对标题、摘要和方法后再生成。');
+  }catch(err){ showErr('模型优化失败：'+err.message+'。已保留本地解析结果。'); }
+  finally{ btn.disabled=false; btn.textContent='用当前文本模型优化解析'; }
+};
+$('#pdfFile').onchange = async e=>{
+  const file=e.target.files[0]; if(!file) return;
+  const btn=$('#uploadBtn'); btn.disabled=true; btn.textContent='解析中…';
+  try{
+    const buf=await file.arrayBuffer();
+    pdfjsLib.GlobalWorkerOptions.workerSrc=new URL('vendor/pdf.worker.min.js',document.baseURI).href;
+    const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    const n=Math.min(20,pdf.numPages), pages=[];
     for(let pi=1;pi<=n;pi++){
-      const pg = await pdf.getPage(pi);
-      const cc = await pg.getTextContent();
-      pages.push(cc.items.map(it=>it.str).join(' '));
+      const cc=await (await pdf.getPage(pi)).getTextContent();
+      pages.push(cc.items.map(it=>it.str||'').join(' '));
     }
-    const full = pages.join('\n');
-    let abstract='';
-    const am = full.match(/abstract[\s—\-:.\n]+(.+?)(?:\n\s*(?:1\.?\s*)?(?:introduction|related work)\b|index terms|keywords)/is);
-    if(am) abstract = am[1].replace(/\s+/g,' ').trim();
-    let method='';
-    const mm = full.match(/^\s*(?:\d{1,2}\s*)?(?:method|methods|methodology|our approach|approach)\s*$([\s\S]+?)(?:^\s*(?:\d{1,2}\s*)?(?:experiments|evaluation|results|conclusion)\s*$)/im);
-    if(mm) method = ('Method excerpt: ' + mm[1].replace(/\s+/g,' ').trim()).slice(0,1600);
-    const parts=[title,abstract,method].filter(Boolean);
-    $('#paper').value = parts.join('\n\n').slice(0,4000);
-    if(!abstract) showErr('未识别到摘要，已填入 PDF 前几页文本，可手动调整。');
-  }catch(err){
-    showErr('PDF 解析失败：'+err.message+'（请确认是可复制文字的 PDF，非扫描图片）');
-  }finally{
-    btn.disabled=false; btn.textContent='上传 PDF 自动提取'; e.target.value='';
-  }
+    const normalize=t=>t.replace(/(?:a\s*){2}b\s*s\s*t\s*r\s*a\s*c\s*t/ig,'abstract').replace(/(?:i\s*)n\s*t\s*r\s*o\s*d\s*u\s*c\s*t\s*i\s*o\s*n/ig,'introduction').replace(/[ \t]+/g,' ').replace(/\n{3,}/g,'\n\n').trim();
+    const full=normalize(pages.join('\n\n')); pdfRawText=full;
+    const section=(starts,ends,max)=>{ const sm=new RegExp('(?:^|\\n|\\s)(?:'+starts+')\\s*[:：.\\-]?\\s*','i').exec(full); if(!sm) return ''; const from=sm.index+sm[0].length; const tail=full.slice(from); const em=new RegExp('(?:\\n|\\s)(?:'+ends+')\\b','i').exec(tail); return tail.slice(0,em?em.index:max).replace(/\\s+/g,' ').trim().slice(0,max); };
+    const title=(pages[0].split(/\n/).map(x=>x.trim()).filter(x=>x.length>12&&x.length<220&&!/^(abstract|摘要|arxiv|http|contents|目录)/i.test(x))[0]||'').trim();
+    const abstract=section('abstract|摘要','introduction|related work|keywords|index terms|关键词',2400);
+    const method=section('(?:\\d+\\s*[.]?\\s*)?(?:method|methods|methodology|our approach|approach|方法|方法论)','experiments|evaluation|results|conclusion|实验|结果|结论',1800);
+    const fallback=full.slice(0,2800);
+    const parts=[title,abstract,method&&('Method excerpt: '+method)].filter(Boolean);
+    $('#paper').value=(parts.length>1?parts:[title,fallback]).filter(Boolean).join('\n\n').slice(0,5000);
+    $('#enhancePdfBtn').hidden=false;
+    if(!abstract) showErr('未识别到标准摘要标题，已保留前 20 页文本并可用当前文本模型优化；扫描版 PDF 仍需 OCR。');
+  }catch(err){ showErr('PDF 解析失败：'+err.message+'（请确认是可复制文字的 PDF，扫描版需 OCR）'); }
+  finally{ btn.disabled=false; btn.textContent='上传 PDF 自动提取'; e.target.value=''; }
 };
 
 /* ---------------- reference images -> data URI ---------------- */
@@ -872,7 +870,7 @@ function friendlyHttp(status, txt){
   if(status===400) return '请求被服务商拒绝：'+txt.slice(0,200);
   return '服务商返回错误（HTTP '+status+'）：'+txt.slice(0,200);
 }
-function postJSON(base, path, body, key, extraHeaders, timeoutMs=90000){
+function postJSON(base, path, body, key, extraHeaders, timeoutMs=120000){
   const ac=new AbortController();
   const to=setTimeout(()=>ac.abort(new DOMException('timeout','TimeoutError')),timeoutMs);
   return fetch(base+path,{method:'POST',
@@ -1092,7 +1090,7 @@ async function genOaiImage(base,model,key,content,p,refIds,layoutGuide){
   const d = JSON.parse(txt);
   const item = d.data?.[0] || d.images?.[0];
   if(!item) throw new Error('图像接口返回格式异常：'+txt.slice(0,200));
-  const imgSrc = item.url || ('data:image/png;base64,'+item.b64_json);
+  const inline=item.inlineData||item.inline_data; const imgSrc = item.url || item.image_url?.url || (item.b64_json&&'data:image/png;base64,'+item.b64_json) || (inline&&('data:'+(inline.mimeType||inline.mime_type||'image/png')+';base64,'+inline.data));
   $('#out').style.display='block';
   $('#out').innerHTML = `<img src="${esc(imgSrc)}" alt="draft">
     <div class="dl"><button class="btn-primary" id="dlImg">下载图片</button>
