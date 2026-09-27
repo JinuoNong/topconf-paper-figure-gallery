@@ -4,11 +4,18 @@
 
 ## [Unreleased]
 
-### Fixed / Community contributions
+> 后续变更将在这里追加。
+
+## [0.7.1] - 2026-09-28
+
+### Fixed / FigureForge workflow
 
 - **FigureForge 绘图意图驱动的 PDF 提取**：新增可折叠的“绘图意图”设置；可在自由输入、基础提取、按意图提取和自定义章节之间切换。选择 Pipeline、Architecture、Training 或 Results 时，浏览器仅从本地 PDF 截取匹配章节，并与标题、摘要及用户提示词组合后交给已选文本模型。
 - **参考图灯箱体验**：FigureForge 参考图复用画廊的大图灯箱交互，支持开合动画、前后图滑动动画、键盘左右切换、Escape 关闭、原图和论文链接，并尊重减少动态效果设置。
 
+- **绘图意图先行**：将可折叠的“先选择绘图意图”设置移到步骤一，用户先选择目标图类型和论文内容提取方式，再检索参考图；按意图提取的章节与标题、摘要及用户提示词组合后交给已选文本模型。
+
+### Fixed / Community contributions
 - **采纳社区 PR #6（[@TansyZenix](https://github.com/TansyZenix)）**：为 FigureForge 生成的 SVG 预览增加 `sandbox` 隔离，保留预览与下载能力，降低不可信 SVG 在同源页面中的脚本风险。
 - **采纳社区 PR #7（[@TansyZenix](https://github.com/TansyZenix)）**：参考图卡片支持键盘聚焦、Enter/Space 选择，并通过 ARIA 状态向辅助技术反馈选择状态。
 - **采纳社区 PR #5（[@TansyZenix](https://github.com/TansyZenix)）**：画廊灯箱打开时把 Tab 焦点限制在可见控件之间，跳过隐藏的前后翻页控件。

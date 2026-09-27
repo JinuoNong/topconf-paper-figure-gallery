@@ -231,30 +231,6 @@
     <div class="hint">检索同时使用语义向量（CLIP，理解论文主题与图面）和关键词匹配（BM25）；不输入内容时可仅用筛选浏览。</div>
   </div>
 
-  <div class="card" id="card2">
-    <div class="step"><span class="num">2</span>挑选参考用例
-      <span class="hint" style="margin:0" id="countHint"></span>
-      <button class="btn-tiny" id="clearBtn" hidden>清空选择</button>
-    </div>
-    <div class="flow-note" id="pickNote">两阶段模式：勾选 <b>8–10 张同类型</b>图（如都选 framework）；直接生成模式：精选 <b>2–3 张</b>即可。</div>
-    <div class="grid" id="grid"></div>
-  </div>
-
-  <div class="card" id="card3">
-    <div class="step"><span class="num">3</span>生成你的主图初稿</div>
-    <div class="refs-strip" id="refsStrip"><span class="hint" style="margin:0">尚未选择参考图，请在上方勾选参考图。</span></div>
-
-    <div class="pass-tabs" id="passTabs">
-      <button data-pass="direct">直接生成<span class="subtag">精选 2–3 张 · 一步出图</span></button>
-      <button data-pass="two" class="on">两阶段归纳<span class="subtag">多选 8–10 张 · 先提炼共性再生成</span></button>
-    </div>
-    <div class="stepper" id="stepper" hidden>
-      <div class="stp" id="stp1"><div class="ball">1</div><div class="lbl">分析参考图</div></div>
-      <div class="stline" id="stline1"><div class="fill"></div></div>
-      <div class="stp" id="stp2"><div class="ball">2</div><div class="lbl">生成主图</div></div>
-    </div>
-    <div id="analyzeBox"></div>
-
     <details class="settings" id="intentSettings" style="margin-top:0;margin-bottom:13px">
       <summary>先选择绘图意图</summary>
     <div class="srow" style="margin-top:11px;margin-bottom:3px">
@@ -290,6 +266,31 @@
     </div>
     <div class="hint" id="contentModeHint" style="margin-top:5px">先上传 PDF，再按绘图意图从本地文本中截取相关章节；只把选中的片段送入后续模型。</div>
     </details>
+
+
+  <div class="card" id="card2">
+    <div class="step"><span class="num">2</span>挑选参考用例
+      <span class="hint" style="margin:0" id="countHint"></span>
+      <button class="btn-tiny" id="clearBtn" hidden>清空选择</button>
+    </div>
+    <div class="flow-note" id="pickNote">两阶段模式：勾选 <b>8–10 张同类型</b>图（如都选 framework）；直接生成模式：精选 <b>2–3 张</b>即可。</div>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div class="card" id="card3">
+    <div class="step"><span class="num">3</span>生成你的主图初稿</div>
+    <div class="refs-strip" id="refsStrip"><span class="hint" style="margin:0">尚未选择参考图，请在上方勾选参考图。</span></div>
+
+    <div class="pass-tabs" id="passTabs">
+      <button data-pass="direct">直接生成<span class="subtag">精选 2–3 张 · 一步出图</span></button>
+      <button data-pass="two" class="on">两阶段归纳<span class="subtag">多选 8–10 张 · 先提炼共性再生成</span></button>
+    </div>
+    <div class="stepper" id="stepper" hidden>
+      <div class="stp" id="stp1"><div class="ball">1</div><div class="lbl">分析参考图</div></div>
+      <div class="stline" id="stline1"><div class="fill"></div></div>
+      <div class="stp" id="stp2"><div class="ball">2</div><div class="lbl">生成主图</div></div>
+    </div>
+    <div id="analyzeBox"></div>
 
     <details class="settings" id="settingsBox" open>
       <summary>模型 / API 设置（选服务商、粘贴 Key；模型每次打开自动实时更新，信息仅保存在本浏览器）</summary>
