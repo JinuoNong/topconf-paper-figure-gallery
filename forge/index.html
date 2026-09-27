@@ -190,6 +190,44 @@
 
   <div class="card" id="card1">
     <div class="step"><span class="num">1</span>输入论文内容</div>
+    <details class="settings" id="intentSettings" style="margin-top:0;margin-bottom:13px">
+      <summary>先选择绘图意图</summary>
+    <div class="srow" style="margin-top:11px;margin-bottom:3px">
+      <div class="sbox">
+        <span>你想生成哪张图</span>
+        <select id="target">
+          <option value="overview">Figure 1 总览 / Teaser（默认）</option>
+          <option value="architecture">方法架构图</option>
+          <option value="pipeline">Pipeline 流程图</option>
+          <option value="results">结果展示图</option>
+          <option value="custom">自定义（手动描述）</option>
+        </select>
+      </div>
+      <div class="sbox" id="targetDescRow" style="flex:1;min-width:260px">
+        <span>具体描述你要的图</span>
+        <input type="text" id="targetDesc" placeholder="例如：画出第 3.2 节解码器结构，包含 cross-attention 与 KV cache">
+      </div>
+    </div>
+    <div class="srow" style="margin-top:8px;margin-bottom:3px">
+      <div class="sbox" style="flex:1;min-width:260px">
+        <span>论文内容来源</span>
+        <select id="contentMode">
+          <option value="free">自由输入（不自动提取）</option>
+          <option value="basic">PDF 基础提取（标题 + 摘要 + 关键词）</option>
+          <option value="intent" selected>PDF 按绘图意图提取（推荐）</option>
+          <option value="custom">PDF 自定义章节 / 页码 / 关键词</option>
+        </select>
+      </div>
+      <div class="sbox" id="contentQueryRow" style="flex:1;min-width:260px" hidden>
+        <span>要提取的章节、页码或关键词</span>
+        <input type="text" id="contentQuery" placeholder="例如：3.2 Decoder；第 5–6 页；cross-attention">
+      </div>
+    </div>
+    <div class="hint" id="contentModeHint" style="margin-top:5px">先上传 PDF，再按绘图意图从本地文本中截取相关章节；只把选中的片段送入后续模型。</div>
+    </details>
+
+
+
     <textarea id="paper" placeholder="粘贴论文标题 + 摘要（或方法概述）。例如：&#10;We propose a diffusion-based video editing framework that ... 我们的方法包含三个模块 ..."></textarea>
     <div class="row">
       <button class="btn-ghost" id="uploadBtn">上传 PDF 自动提取</button>
@@ -230,43 +268,6 @@
     </div>
     <div class="hint">检索同时使用语义向量（CLIP，理解论文主题与图面）和关键词匹配（BM25）；不输入内容时可仅用筛选浏览。</div>
   </div>
-
-    <details class="settings" id="intentSettings" style="margin-top:0;margin-bottom:13px">
-      <summary>先选择绘图意图</summary>
-    <div class="srow" style="margin-top:11px;margin-bottom:3px">
-      <div class="sbox">
-        <span>你想生成哪张图</span>
-        <select id="target">
-          <option value="overview">Figure 1 总览 / Teaser（默认）</option>
-          <option value="architecture">方法架构图</option>
-          <option value="pipeline">Pipeline 流程图</option>
-          <option value="results">结果展示图</option>
-          <option value="custom">自定义（手动描述）</option>
-        </select>
-      </div>
-      <div class="sbox" id="targetDescRow" style="flex:1;min-width:260px">
-        <span>具体描述你要的图</span>
-        <input type="text" id="targetDesc" placeholder="例如：画出第 3.2 节解码器结构，包含 cross-attention 与 KV cache">
-      </div>
-    </div>
-    <div class="srow" style="margin-top:8px;margin-bottom:3px">
-      <div class="sbox" style="flex:1;min-width:260px">
-        <span>论文内容来源</span>
-        <select id="contentMode">
-          <option value="free">自由输入（不自动提取）</option>
-          <option value="basic">PDF 基础提取（标题 + 摘要 + 关键词）</option>
-          <option value="intent" selected>PDF 按绘图意图提取（推荐）</option>
-          <option value="custom">PDF 自定义章节 / 页码 / 关键词</option>
-        </select>
-      </div>
-      <div class="sbox" id="contentQueryRow" style="flex:1;min-width:260px" hidden>
-        <span>要提取的章节、页码或关键词</span>
-        <input type="text" id="contentQuery" placeholder="例如：3.2 Decoder；第 5–6 页；cross-attention">
-      </div>
-    </div>
-    <div class="hint" id="contentModeHint" style="margin-top:5px">先上传 PDF，再按绘图意图从本地文本中截取相关章节；只把选中的片段送入后续模型。</div>
-    </details>
-
 
   <div class="card" id="card2">
     <div class="step"><span class="num">2</span>挑选参考用例
