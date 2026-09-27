@@ -6,6 +6,11 @@
 
 ### Fixed / Community contributions
 
+- **采纳社区 PR #6（[@TansyZenix](https://github.com/TansyZenix)）**：为 FigureForge 生成的 SVG 预览增加 `sandbox` 隔离，保留预览与下载能力，降低不可信 SVG 在同源页面中的脚本风险。
+- **采纳社区 PR #7（[@TansyZenix](https://github.com/TansyZenix)）**：参考图卡片支持键盘聚焦、Enter/Space 选择，并通过 ARIA 状态向辅助技术反馈选择状态。
+- **采纳社区 PR #5（[@TansyZenix](https://github.com/TansyZenix)）**：画廊灯箱打开时把 Tab 焦点限制在可见控件之间，跳过隐藏的前后翻页控件。
+- **采纳社区 PR #8（[@TansyZenix](https://github.com/TansyZenix)）**：新增 GitHub Actions 数据守护，校验元数据、ID、图片路径、生成索引和来源字段，避免数据回归。
+
 - **修复社区贡献被覆盖（[#4](https://github.com/qwdwqfwq/topconf-paper-figure-gallery/issues/4)）**：v0.5 提交 `665761f` 覆盖了此前已合并的 PR #2 / #3 灯箱代码及更新记录。本次在当前版本上恢复其实现，保留 2026 年数据、FigureForge 入口和后续更新。感谢 [@timelic](https://github.com/timelic) 贡献两项 PR，并发现和报告此次回归。
 - **社区贡献（[@timelic](https://github.com/timelic)，[#2](https://github.com/qwdwqfwq/topconf-paper-figure-gallery/pull/2)）**：采纳灯箱共享元素过渡动画；卡片图片 / 标题 / 等级角标通过 View Transitions API 平滑进入灯箱，灯箱翻页使用滑入滑出效果，并为不支持该 API 的浏览器和“减少动态效果”设置保留兼容回退。
 - **社区贡献（[@timelic](https://github.com/timelic)，[#3](https://github.com/qwdwqfwq/topconf-paper-figure-gallery/pull/3)）**：继续打磨灯箱过渡；作者名单、查看图片 / 论文链接、等级角标、卡片圆角和分隔符在单行 / 换行布局与窗口缩放时保持连续过渡。
