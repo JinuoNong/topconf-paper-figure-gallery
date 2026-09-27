@@ -15,7 +15,6 @@
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](requirements.txt)
 [![License: MIT](https://img.shields.io/badge/code%20license-MIT-green.svg)](LICENSE)
 [![Images license](https://img.shields.io/badge/images-CC%20BY%20(attribution)-yellow.svg)](IMAGES_POLICY.md)
-[![Metadata policy](https://img.shields.io/badge/metadata-citation%20required-blue.svg)](DATA_LICENSE.md)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 ![Last commit](https://img.shields.io/github/last-commit/qwdwqfwq/topconf-paper-figure-gallery)
 ![Stars](https://img.shields.io/github/stars/qwdwqfwq/topconf-paper-figure-gallery?style=social)
@@ -27,8 +26,8 @@ HTML/CSS/JS, no build step, works offline.
 **做论文配图前，先看看顶会里最会画图的人是怎么画的。**
 一个可搜索、可筛选的 Figure 1 / Teaser 画廊，纯静态、零构建、双击即开。
 
-[🌐 Live gallery 在线画廊](https://qwdwqfwq.github.io/topconf-paper-figure-gallery/) · [🛠️ FigureForge 画图](https://qwdwqfwq.github.io/topconf-paper-figure-gallery/forge) · [🎬 Demo video 演示视频](https://qwdwqfwq.github.io/topconf-paper-figure-gallery/docs/demo.html) · [📚 Methodology 数据与方法](docs/METHODOLOGY.md) ·
-[⚖️ Image policy 版权 / 下架](IMAGES_POLICY.md) · [🗃️ Metadata policy 元数据许可](DATA_LICENSE.md) · [🤝 Contributing 贡献指南](CONTRIBUTING.md)
+[🌐 Live gallery 在线画廊](https://qwdwqfwq.github.io/topconf-paper-figure-gallery/) · [🛠️ FigureForge 画图](https://qwdwqfwq.github.io/topconf-paper-figure-gallery/forge) · [📚 Methodology 数据与方法](docs/METHODOLOGY.md) ·
+[⚖️ Image policy 版权 / 下架](IMAGES_POLICY.md) · [🤝 Contributing 贡献指南](CONTRIBUTING.md)
 
 </div>
 
@@ -59,14 +58,6 @@ FigureForge turns the gallery into a drafting tool: describe your paper, and 3,5
 <p align="center">
   <img src="forge/demo-forge.gif" alt="FigureForge walkthrough: describe paper, retrieve references, generate bitmap draft" width="560">
 </p>
-
-#### 🎬 Demo video / 演示视频 · 1:58
-
-**[▶ Watch the demo / 点击观看完整演示（有声音）](https://qwdwqfwq.github.io/topconf-paper-figure-gallery/docs/demo.html)**
-
-Click the preview below to open the video player. / 点击下方预览图，在独立播放页观看演示，支持暂停、拖动进度和全屏。
-
-[![▶ FigureForge demo video / 点击播放演示视频](assets/figureforge-demo-poster.jpg)](https://qwdwqfwq.github.io/topconf-paper-figure-gallery/docs/demo.html)
 
 1. **Describe your paper** — paste the title + abstract, upload the PDF (title / abstract / method are extracted locally), or just type one sentence; state the “input → our method → output” story. Pre-filter by venue / year / tier / pattern before retrieving.
 2. **Pick the right pattern** — `framework` for multi-agent / system overviews, `pipeline` for end-to-end flows, `architecture` for internal model structure, `conceptual` for visual metaphors (plus `teaser` and `taxonomy`).
@@ -99,7 +90,7 @@ Community contributions (new papers, better crops, new venues such as CHI / RSS 
 are the intended growth path after the 2023–2026 baseline.
 
 Image files remain attributed to their authors and publishers; see
-[IMAGES_POLICY.md](IMAGES_POLICY.md) for the educational-use and 72-hour takedown policy. If you use this project's metadata, curated index, labels, or derived data in research, teaching, benchmarks, model-training corpora, or a paper, you must cite the repository and acknowledge the gallery in the paper's acknowledgements section. Include the repository URL and the original paper/proceedings sources; see [DATA_LICENSE.md](DATA_LICENSE.md).
+[IMAGES_POLICY.md](IMAGES_POLICY.md) for the educational-use and 72-hour takedown policy.
 
 ---
 
@@ -118,8 +109,6 @@ Image files remain attributed to their authors and publishers; see
 - 🔁 数据管线完全开源：会议索引 → PDF 下载 → Figure 1 裁剪 → 25+ 条规则打分 → dHash 去重 → 逐张人工复核
 
 ## 🛠️ FigureForge Beta：从「找灵感」到「出初稿」
-
-**[🎬 演示视频：点击观看完整操作录屏（1 分 58 秒，有声音）](https://qwdwqfwq.github.io/topconf-paper-figure-gallery/docs/demo.html)**
 
 FigureForge 让画廊从「找灵感」走到「出初稿」：描述你的论文，3,516 张顶会主图就会成为你 Figure 1 的版式灵感来源——纯开源、免注册、无服务器，全部在浏览器本地运行。**[立即试用 FigureForge →](forge/index.html)**
 
@@ -147,20 +136,6 @@ FigureForge 让画廊从「找灵感」走到「出初稿」：描述你的论�
 - 🔑 **只需填 Key**：预置火山方舟（Seedream / 豆包）、硅基流动、智谱、DeepSeek、OpenAI、Kimi（月之暗面）、通义千问 Qwen、腾讯混元、Anthropic Claude 及任意 OpenAI 兼容中转，共十家，服务商与模型均为下拉选择。
 - 🔄 **模型列表自动保鲜**：每次打开页面自动刷新内置清单；填入 Key 后实时拉取服务商 `/models`，新发布模型自动出现、无需更新页面。（Anthropic 无模型列表接口；混元 / Anthropic 官方接口不开放浏览器跨域，这两家勾选中转并填入 OpenAI 兼容中转地址即可。）
 - 📐 **能力边界**：面向 Figure 1 这一窄场景的高质量初稿，文字与数字提交前仍需人工核对。
-
-**位图模式支持矩阵（以当前内置清单为准）**：
-
-| 服务商 | 可生成位图的模型 | 说明 |
-|---|---|---|
-| 火山方舟 Ark | `doubao-seedream-5-0-pro-260628`、`doubao-seedream-5-0-flash-260915`、`doubao-seedream-5-0-260128`、`doubao-seedream-4-5-251128`、`doubao-seedream-4-0-250828` | Seedream 图像模型 |
-| 硅基流动 SiliconFlow | `black-forest-labs/FLUX.1-schnell`、`black-forest-labs/FLUX.1-dev`、`Kwai-Kolors/Kolors`、`stabilityai/stable-diffusion-3-5-large` | 图像生成模型 |
-| 智谱 GLM | `cogview-4`、`cogview-3-flash` | CogView 图像模型 |
-| OpenAI | `gpt-image-1`、`dall-e-3` | Image API 模型 |
-| 通义千问 Qwen | `qwen-image-3.0-pro`、`qwen-image-3.0`、`qwen-image-2.0-pro` | Qwen-Image 模型 |
-| 腾讯混元 Hunyuan | `hy-image-v3`、`hy-image-v3.5-preview` | Hunyuan Image 模型，通常需要中转 |
-| DeepSeek、Kimi、Anthropic Claude | 暂无 | 对话/视觉模型可生成 SVG，不能调用位图接口 |
-
-位图模式下，页面只显示图像模型；对话模型（例如 DeepSeek、Kimi、Claude）不会作为位图选项出现。
 - 🤝 **纯开源、永不收费，欢迎一起共建**：画廊与 FigureForge 均为 MIT 许可、免费使用，未来不会推出收费版本（API Key 的费用直接付给模型厂商）；欢迎提 Pull Request 补论文、补会议、修标签，每年顶会主图持续更新，一起把它做得更好用。
 
 ## 📊 收录规模 / Coverage
@@ -299,7 +274,7 @@ Issue，贴上论文链接和你推荐的图即可，维护者会处理。提 PR
 ICLR / ICML(PMLR) / NeurIPS / CVPR(CVF) / ACL Anthology 正式出版论文多为 CC BY 4.0，
 AAAI 论文版权归 AAAI 与作者所有（fair-use 学术参考）。
 版权方若要求下架，请提 Issue 或邮件 **939123836@qq.com**，核实后 72 小时内删除。
-详见 [IMAGES_POLICY.md](IMAGES_POLICY.md)。如果在科研、教学、基准测试、模型训练语料或论文中使用本项目的元数据、精选索引、标签、筛选结果或衍生数据，必须引用本项目，并在论文致谢中注明使用了本画廊；同时注明仓库链接和相关原始论文/会议出版来源，具体要求见 [DATA_LICENSE.md](DATA_LICENSE.md)。
+详见 [IMAGES_POLICY.md](IMAGES_POLICY.md)。
 
 ## 📌 引用
 

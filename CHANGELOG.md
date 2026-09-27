@@ -4,18 +4,10 @@
 
 ## [Unreleased]
 
-> 后续变更将在这里追加。
-
-## [0.7.0] - 2026-09-27
-
-### Fixed / FigureForge and release safety
-
-- **Issue #9**：参考图卡片新增“查看大图”和“原文”操作；灯箱支持关闭、左右切换、Esc/方向键、打开论文链接和直接选为参考，点击操作不会误触发选择。
-- **Issue #10**：PDF 提取改为最多读取前 20 页，兼容分隔字母标题、中文摘要、跨页章节和双栏空白；无标准摘要时保留可核对的前文，并可选择用当前配置的文本模型清理结果。
-- **中转 API 兼容**：图像响应兼容 OpenAI `data`、通用 `images/output` 以及 Gemini 风格 `inlineData`；请求超时延长并保留无参考图降级，避免中转只支持纯文本时整次失败。
-- **发布安全**：本版本对应不可变 `v0.7.0` 标签，并保留 `archive/pre-0.7.0-a1a376f` 回退点；发布检查完整校验图片、索引、元数据和 JavaScript 语法。
-
 ### Fixed / Community contributions
+
+- **FigureForge 绘图意图驱动的 PDF 提取**：新增可折叠的“绘图意图”设置；可在自由输入、基础提取、按意图提取和自定义章节之间切换。选择 Pipeline、Architecture、Training 或 Results 时，浏览器仅从本地 PDF 截取匹配章节，并与标题、摘要及用户提示词组合后交给已选文本模型。
+- **参考图灯箱体验**：FigureForge 参考图复用画廊的大图灯箱交互，支持开合动画、前后图滑动动画、键盘左右切换、Escape 关闭、原图和论文链接，并尊重减少动态效果设置。
 
 - **采纳社区 PR #6（[@TansyZenix](https://github.com/TansyZenix)）**：为 FigureForge 生成的 SVG 预览增加 `sandbox` 隔离，保留预览与下载能力，降低不可信 SVG 在同源页面中的脚本风险。
 - **采纳社区 PR #7（[@TansyZenix](https://github.com/TansyZenix)）**：参考图卡片支持键盘聚焦、Enter/Space 选择，并通过 ARIA 状态向辅助技术反馈选择状态。
