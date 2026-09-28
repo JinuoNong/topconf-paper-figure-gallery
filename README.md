@@ -26,7 +26,7 @@ HTML/CSS/JS, no build step, works offline.
 **做论文配图前，先看看顶会里最会画图的人是怎么画的。**
 一个可搜索、可筛选的 Figure 1 / Teaser 画廊，纯静态、零构建、双击即开。
 
-[🌐 Live gallery 在线画廊](https://qwdwqfwq.github.io/topconf-paper-figure-gallery/) · [🛠️ FigureForge 画图](https://qwdwqfwq.github.io/topconf-paper-figure-gallery/forge) · [📚 Methodology 数据与方法](docs/METHODOLOGY.md) ·
+[🌐 Live gallery 在线画廊](https://qwdwqfwq.github.io/topconf-paper-figure-gallery/) · [🛠️ FigureForge 画图](https://qwdwqfwq.github.io/topconf-paper-figure-gallery/forge) · [🎬 Demo video 演示视频](https://qwdwqfwq.github.io/topconf-paper-figure-gallery/docs/demo.html) · [📚 Methodology 数据与方法](docs/METHODOLOGY.md) ·
 [⚖️ Image policy 版权 / 下架](IMAGES_POLICY.md) · [🤝 Contributing 贡献指南](CONTRIBUTING.md)
 
 </div>
@@ -58,6 +58,14 @@ FigureForge turns the gallery into a drafting tool: describe your paper, and 3,5
 <p align="center">
   <img src="forge/demo-forge.gif" alt="FigureForge walkthrough: describe paper, retrieve references, generate bitmap draft" width="560">
 </p>
+
+#### 🎬 Demo video / 演示视频 · 1:58
+
+**[▶ Watch the demo / 点击观看完整演示（有声音）](https://qwdwqfwq.github.io/topconf-paper-figure-gallery/docs/demo.html)**
+
+Click the preview below to open the video player. / 点击下方预览图，在独立播放页观看演示，支持暂停、拖动进度和全屏。
+
+[![▶ FigureForge demo video / 点击播放演示视频](assets/figureforge-demo-poster.jpg)](https://qwdwqfwq.github.io/topconf-paper-figure-gallery/docs/demo.html)
 
 1. **Describe your paper** — paste the title + abstract, upload the PDF (title / abstract / method are extracted locally), or just type one sentence; state the “input → our method → output” story. Pre-filter by venue / year / tier / pattern before retrieving.
 2. **Pick the right pattern** — `framework` for multi-agent / system overviews, `pipeline` for end-to-end flows, `architecture` for internal model structure, `conceptual` for visual metaphors (plus `teaser` and `taxonomy`).
@@ -109,6 +117,8 @@ Image files remain attributed to their authors and publishers; see
 - 🔁 数据管线完全开源：会议索引 → PDF 下载 → Figure 1 裁剪 → 25+ 条规则打分 → dHash 去重 → 逐张人工复核
 
 ## 🛠️ FigureForge Beta：从「找灵感」到「出初稿」
+
+**[🎬 演示视频：点击观看完整操作录屏（1 分 58 秒，有声音）](https://qwdwqfwq.github.io/topconf-paper-figure-gallery/docs/demo.html)**
 
 FigureForge 让画廊从「找灵感」走到「出初稿」：描述你的论文，3,516 张顶会主图就会成为你 Figure 1 的版式灵感来源——纯开源、免注册、无服务器，全部在浏览器本地运行。**[立即试用 FigureForge →](forge/index.html)**
 
