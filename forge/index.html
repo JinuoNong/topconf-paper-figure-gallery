@@ -44,6 +44,29 @@
   .btn-mini{background:#eef2ff;color:#4338ca;font-weight:700;padding:6px 12px;font-size:12.5px}
   .btn-tiny{background:transparent;color:var(--muted);font-weight:600;font-size:12px;padding:4px 8px;text-decoration:underline}
   .hint{color:var(--muted);font-size:12.5px;margin-top:10px}
+  .parse-status{margin-top:12px;padding:12px 14px;border:1px solid #fecdd3;border-left:4px solid #f43f5e;border-radius:12px;
+    background:#fff1f2;color:#9f1239;font-size:13px;font-weight:650;line-height:1.65}
+  .parse-status::before{content:attr(data-label);display:block;font-size:11px;font-weight:800;letter-spacing:.5px;margin-bottom:3px;color:#be123c}
+  .parse-status[data-state="success"]{background:#ecfdf5;border-color:#a7f3d0;border-left-color:#10b981;color:#065f46}
+  .parse-status[data-state="success"]::before{color:#047857}
+  .parse-status[data-state="error"]{background:#fef2f2;border-color:#fecaca;border-left-color:#dc2626;color:#991b1b}
+  .parse-status[data-state="loading"]::before{animation:parsePulse 1.6s ease-in-out infinite}
+  .parse-meta{margin:7px 2px 0;font-size:12px;font-weight:400;color:#64748b;overflow-wrap:anywhere}
+  .pdf-upload-btn{display:inline-flex;align-items:center;gap:11px;padding:11px 19px 11px 12px;max-width:100%;
+    border:1px solid #c4b5fd;border-radius:22px;background:linear-gradient(145deg,#8b5cf6,#4f46e5);color:#fff;
+    box-shadow:0 6px 0 #3730a3,0 10px 22px #6366f133,inset 0 2px 0 #ffffff66;
+    transition:transform .4s cubic-bezier(.34,1.56,.64,1),box-shadow .25s;transform-origin:center}
+  .pdf-upload-icon{display:grid;place-items:center;width:38px;height:42px;flex-shrink:0;border-radius:12px;background:#ffffff24;
+    border:1px solid #ffffff66;font-size:11px;font-weight:850;box-shadow:inset 0 1px 2px #ffffff44}
+  .pdf-upload-copy{text-align:left;display:grid;gap:1px}
+  .pdf-upload-copy strong{font-size:15px;font-weight:800}.pdf-upload-copy small{font-size:11px;color:#ede9fe;font-weight:400}
+  .pdf-upload-arrow{font-size:20px;margin-left:7px}
+  .pdf-upload-btn:hover:not(:disabled){transform:translateY(-2px) scale(1.025);box-shadow:0 8px 0 #3730a3,0 14px 26px #6366f140,inset 0 2px 0 #ffffff66}
+  .pdf-upload-btn:active:not(:disabled){transform:translateY(5px) scale(.96, .94);box-shadow:0 1px 0 #3730a3,0 3px 8px #6366f126;transition-duration:.09s}
+  .pdf-upload-btn:focus-visible{outline:3px solid #a78bfa;outline-offset:6px}
+  .pdf-upload-btn:disabled{cursor:wait;background:linear-gradient(145deg,#7c6bb7,#6359a0);box-shadow:0 3px 0 #4c4381,inset 0 2px 0 #ffffff44}
+  @keyframes parsePulse{50%{opacity:.5}}
+  @media(prefers-reduced-motion:reduce){.pdf-upload-btn{transition:none}.pdf-upload-btn:hover:not(:disabled),.pdf-upload-btn:active:not(:disabled){transform:none}.parse-status[data-state="loading"]::before{animation:none}}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(226px,1fr));gap:14px}
   .rc{border:1px solid var(--line);border-radius:13px;overflow:hidden;background:#fff;position:relative;
       transition:transform .12s, box-shadow .12s, border-color .12s;cursor:pointer}
@@ -223,8 +246,8 @@
         <input type="text" id="contentQuery" placeholder="例如：3.2 Decoder；第 5–6 页；cross-attention">
       </div>
     </div>
-    <div class="hint" id="contentModeHint" style="margin-top:5px">先上传 PDF。步骤一配置的对话 / 视觉模型会直接阅读论文，按绘图意图总结相关章节并组合成绘图提示词。</div>
-    <div class="hint" id="pdfExtractionMeta" style="margin-top:4px;color:var(--muted)">尚未上传 PDF。</div>
+    <div class="parse-status" id="contentModeHint" data-state="idle" data-label="解析说明" role="status" aria-live="polite">先上传 PDF。解析模型将阅读论文，按绘图意图总结相关章节，生成可编辑的绘图提示词。</div>
+    <div class="parse-meta" id="pdfExtractionMeta">尚未上传 PDF。</div>
     </details>
 
     <details class="settings" id="apiSettingsStep1" open>
@@ -248,7 +271,7 @@
 
     <textarea id="paper" placeholder="粘贴论文标题 + 摘要（或方法概述）。例如：&#10;We propose a diffusion-based video editing framework that ... 我们的方法包含三个模块 ..."></textarea>
     <div class="row">
-      <button class="btn-ghost" id="uploadBtn">上传 PDF 自动提取</button>
+      <button class="pdf-upload-btn" id="uploadBtn" type="button"><span class="pdf-upload-icon" aria-hidden="true">PDF</span><span class="pdf-upload-copy"><strong id="uploadLabel">上传论文 PDF</strong><small>按绘图意图提取内容</small></span><span class="pdf-upload-arrow" aria-hidden="true">↑</span></button>
       <input type="file" id="pdfFile" accept="application/pdf" hidden>
       <span style="font-size:12.5px;color:var(--muted)">没有论文？试试示例：</span>
       <button class="btn-mini exchip" data-ex="robot">机器人操作</button>
@@ -724,18 +747,25 @@ function renderPdfSummary(data){
   const pieces=[data.title&&`标题：${data.title}`,data.abstract&&`摘要要点：${data.abstract}`,sections.map(x=>`【${x.section||'相关章节'}】${x.summary}${x.evidence?`\n证据：${x.evidence}`:''}`).join('\n\n'),data.figurePrompt&&`绘图提示词：${data.figurePrompt}`].filter(Boolean);
   $('#paper').value=pieces.join('\n\n').slice(0,12000);
 }
+function setParseStatus(state){
+  const el=$('#contentModeHint'); el.dataset.state=state;
+  el.dataset.label={idle:'解析说明',loading:'正在解析 · 请稍候',success:'解析完成',error:'解析未完成'}[state];
+}
 async function selectPdfContext(){
   if(!pdfContext || $('#contentMode').value==='free') return;
   const seq=++pdfIntentSeq, mode=$('#contentMode').value;
-  $('#contentModeHint').textContent='正在把 PDF 发送给步骤一配置的解析模型，按绘图意图提取并总结章节…';
-  $('#pdfExtractionMeta').textContent=`解析模型：${parserModel()||'未选择'}；PDF 不会走本地 PDF.js 语义提取。`;
+  setParseStatus('loading');
+  $('#contentModeHint').textContent='正在发送 PDF，模型将按绘图意图提取相关章节并总结…';
+  $('#pdfExtractionMeta').textContent=`解析模型：${parserModel()||'未选择'} · 使用步骤一的 API 配置`;
   try{
     const result=await callPdfParser(); if(seq!==pdfIntentSeq) return;
     renderPdfSummary(result);
-    $('#contentModeHint').textContent='已由解析模型按绘图意图选择章节、归纳段落并组合绘图提示词；结果可继续手动编辑。';
+    setParseStatus('success');
+    $('#contentModeHint').textContent='已提取相关章节并组合绘图提示词。你可以在下方继续编辑。';
     $('#pdfExtractionMeta').textContent=`${pdfContext.fileName} · 已由 ${parserModel()} 完成模型解析，共返回 ${result.selectedSections.length} 个相关段落。`;
   }catch(err){
     if(seq!==pdfIntentSeq) return;
+    setParseStatus('error');
     $('#contentModeHint').textContent='模型解析失败；请更换支持 PDF / 文档输入的模型，或改用自由输入。';
     $('#pdfExtractionMeta').textContent='未生成本地兜底文本，避免把低质量抽取误当成模型结果。';
     showErr('PDF 模型解析失败：'+err.message);
@@ -743,6 +773,7 @@ async function selectPdfContext(){
 }
 function syncContentMode(){
   const mode=$('#contentMode').value; $('#contentQueryRow').hidden=mode!=='custom';
+  setParseStatus('idle');
   $('#contentModeHint').textContent=mode==='free'?'自由输入模式：不会自动调用解析模型。':mode==='basic'?'由步骤一解析模型提取标题、摘要和关键词，适合总览图。':mode==='intent'?'由步骤一解析模型按绘图意图选择相关章节并总结，再与摘要组合提示词。':'解析模型按你提供的章节、页码或关键词定位并总结相关段落。';
   if(pdfContext && mode!=='free') selectPdfContext();
 }
@@ -753,7 +784,7 @@ $('#targetDesc').addEventListener('input',()=>{ if(pdfContext && $('#contentMode
 $('#uploadBtn').onclick=()=>$('#pdfFile').click();
 $('#pdfFile').onchange=async e=>{
   const file=e.target.files[0]; if(!file)return;
-  const btn=$('#uploadBtn'); btn.disabled=true; btn.textContent='读取 PDF…';
+  const btn=$('#uploadBtn'); btn.disabled=true; btn.setAttribute('aria-busy','true'); $('#uploadLabel').textContent='读取与解析中…';
   try{
     if(file.size>25*1024*1024) throw new Error('PDF 超过 25 MB，请压缩文件或粘贴需要解析的章节文本');
     const dataUri=await fileToDataURI(file);
@@ -761,7 +792,7 @@ $('#pdfFile').onchange=async e=>{
     $('#pdfExtractionMeta').textContent=`已读取 ${file.name}（${Math.round(file.size/1024)} KB）；等待解析模型处理。`;
     if($('#contentMode').value!=='free') await selectPdfContext();
   }catch(err){ showErr('PDF 读取失败：'+err.message); }
-  finally{ btn.disabled=false; btn.textContent='上传 PDF 自动提取'; e.target.value=''; }
+  finally{ btn.disabled=false; btn.removeAttribute('aria-busy'); $('#uploadLabel').textContent='上传论文 PDF'; e.target.value=''; }
 };
 
 /* ---------------- reference images -> data URI ---------------- */
