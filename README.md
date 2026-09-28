@@ -67,7 +67,7 @@ Click the preview below to open the video player. / 点击下方预览图，在�
 
 [![▶ FigureForge demo video / 点击播放演示视频](assets/figureforge-demo-poster.jpg)](https://qwdwqfwq.github.io/topconf-paper-figure-gallery/docs/demo.html)
 
-1. **Describe your paper** — paste the title + abstract, upload the PDF (title / abstract / method are extracted locally), or just type one sentence; state the “input → our method → output” story. Pre-filter by venue / year / tier / pattern before retrieving.
+1. **Describe your paper** — paste the title + abstract, upload the PDF (PDF.js parses text and page/section candidates locally; in intent mode your configured text model selects the passages that fit Overview / Architecture / Pipeline / Results), or just type one sentence; state the “input → our method → output” story. Pre-filter by venue / year / tier / pattern before retrieving.
 2. **Pick the right pattern** — `framework` for multi-agent / system overviews, `pipeline` for end-to-end flows, `architecture` for internal model structure, `conceptual` for visual metaphors (plus `teaser` and `taxonomy`).
 3. **Tick reference figures** — a hybrid **CLIP + BM25** search ranks all 3,516 figures by a relevance score (top-right of each card); tick **8–10 same-pattern cards** for two-stage mode (higher scores first), or just **2–3** for direct mode.
 
@@ -126,7 +126,7 @@ FigureForge 让画廊从「找灵感」走到「出初稿」：描述你的论�
   <img src="forge/demo-forge.gif" alt="FigureForge 流程演示：输入论文、检索参考图、生成位图初稿" width="560">
 </p>
 
-1. **输入论文内容**：粘贴标题 + 摘要、上传 PDF（本地自动提取标题 / 摘要 / 方法章节），或直接写一句话，讲清「输入 → 我们的方法 → 输出」；检索前可先按会议 / 年份 / 等级 / 模式筛选。
+1. **输入论文内容**：粘贴标题 + 摘要、上传 PDF（PDF.js 在本地解析文字、页码和章节候选；按绘图意图时由你配置的文本模型筛选适合“概览 / 架构 / Pipeline / 结果”的段落），或直接写一句话，讲清「输入 → 我们的方法 → 输出」；检索前可先按会议 / 年份 / 等级 / 模式筛选。
 2. **选对 Pattern 模式**：多智能体 / 系统总览选 `framework`，端到端流程选 `pipeline`，模型内部结构选 `architecture`，概念隐喻选 `conceptual`（另有 `teaser` 和 `taxonomy`）。
 3. **勾选参考图**：**CLIP + BM25 混合检索**全量 3,516 张图，按**相关度评分（卡片右上角分数）**降序排列；两阶段模式勾选 **8–10 张同类型图**（如都选 framework，优先高分），直接生成模式精选 **2–3 张**即可。
 
