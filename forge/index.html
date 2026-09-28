@@ -183,7 +183,7 @@
       <h1>FigureForge <span style="color:var(--indigo)">Beta</span></h1>
       <div class="sub">上传你的论文内容 → 从 3,516 张顶会主图中检索最贴合的参考 → 生成你的主图初稿</div>
     </div>
-    <div class="pill">浏览器本地运行 · 仅在你选择模型提取时发送选中的论文片段</div>
+    <div class="pill">浏览器本地运行 · PDF 仅在你点击模型解析时发送给步骤一配置的模型</div>
   </header>
 
   <div id="bootBanner"><span class="spin big" style="padding:0"></span><span id="bootText">正在加载检索索引与本地 CLIP 模型（首次约需下载数十 MB）…</span></div>
@@ -213,9 +213,9 @@
         <span>论文内容来源</span>
         <select id="contentMode">
           <option value="free">自由输入（不自动提取）</option>
-          <option value="basic">PDF 基础提取（标题 + 摘要 + 关键词）</option>
+          <option value="basic">PDF 模型基础提取（标题 + 摘要 + 关键词）</option>
           <option value="intent" selected>PDF 按绘图意图提取（推荐）</option>
-          <option value="custom">PDF 自定义章节 / 页码 / 关键词</option>
+          <option value="custom">PDF 模型自定义章节 / 页码 / 关键词</option>
         </select>
       </div>
       <div class="sbox" id="contentQueryRow" style="flex:1;min-width:260px" hidden>
@@ -223,10 +223,27 @@
         <input type="text" id="contentQuery" placeholder="例如：3.2 Decoder；第 5–6 页；cross-attention">
       </div>
     </div>
-    <div class="hint" id="contentModeHint" style="margin-top:5px">先上传 PDF。PDF.js 只负责在本地取字和定位章节；配置 API 后，由当前服务商的文本模型按绘图意图筛选片段并与摘要组合。</div>
+    <div class="hint" id="contentModeHint" style="margin-top:5px">先上传 PDF。步骤一配置的对话 / 视觉模型会直接阅读论文，按绘图意图总结相关章节并组合成绘图提示词。</div>
     <div class="hint" id="pdfExtractionMeta" style="margin-top:4px;color:var(--muted)">尚未上传 PDF。</div>
     </details>
 
+    <details class="settings" id="apiSettingsStep1" open>
+      <summary>论文解析模型与接口（步骤一；Key 仅保存在本浏览器）</summary>
+      <div class="srow">
+        <div class="sbox"><span>服务商</span><select id="provider"></select></div>
+        <div class="sbox" style="flex:1;min-width:220px"><span>API Key</span><input type="password" id="key" placeholder="粘贴你的 API Key，仅保存在本机浏览器"></div>
+        <div class="sbox"><span>&nbsp;</span><button class="btn-ghost" id="refreshModels">刷新模型列表</button></div>
+      </div>
+      <div class="srow">
+        <div class="sbox" style="flex:1;min-width:260px"><span>论文解析模型（对话 / 视觉模型）</span><select id="parseModel"></select></div>
+      </div>
+      <div class="srow" id="parseCustomModelRow" hidden><div class="sbox" style="flex:1;min-width:220px"><span>解析模型 ID（自定义 / 中转）</span><input type="text" id="parseCustomModel" placeholder="例如 gpt-4.1 或 gemini-2.5-pro"></div></div>
+      <div class="hint">PDF 会直接发送给这里选择的模型；模型负责按绘图意图定位章节、归纳段落并生成可用于出图的内容。扫描 PDF 是否可读取取决于服务商的文档 / 视觉能力。</div>
+      <div class="chkline"><input type="checkbox" id="useRelay"><label for="useRelay">使用中转 / 自定义接入地址（官方接口浏览器直连受限时勾选）</label></div>
+      <div class="srow" id="relayRow" hidden><div class="sbox" style="flex:1;min-width:260px"><span>接入 Base URL（OpenAI 兼容，如中转网关地址）</span><input type="text" id="baseOverride" placeholder="例如 https://your-relay.com/v1"></div></div>
+      <div class="srow" id="customModelRow" hidden><div class="sbox" style="flex:1;min-width:220px"><span>出图模型 ID（自定义 / 中转）</span><input type="text" id="customModel" placeholder="例如 claude-opus-5-5 或 gpt-5"></div></div>
+      <div class="hint" id="baseHint"></div><div class="corsnote" id="corsNote" hidden></div><div class="hint" id="manifestHint"></div>
+    </details>
 
 
     <textarea id="paper" placeholder="粘贴论文标题 + 摘要（或方法概述）。例如：&#10;We propose a diffusion-based video editing framework that ... 我们的方法包含三个模块 ..."></textarea>
@@ -295,58 +312,11 @@
     <div id="analyzeBox"></div>
 
     <details class="settings" id="settingsBox" open>
-      <summary>模型 / API 设置（选服务商、粘贴 Key；模型每次打开自动实时更新，信息仅保存在本浏览器）</summary>
-
-      <div class="srow">
-        <div class="tabs" id="modeTabs">
-          <button data-mode="svg" class="on">SVG 可编辑初稿（推荐，文字准确）</button>
-          <button data-mode="image">AI 位图初稿（需要图像模型）</button>
-        </div>
-      </div>
-
-      <div class="srow">
-        <div class="sbox">
-          <span>服务商</span>
-          <select id="provider"></select>
-        </div>
-        <div class="sbox" style="flex:1;min-width:220px">
-          <span>API Key</span>
-          <input type="password" id="key" placeholder="粘贴你的 API Key，仅保存在本机浏览器">
-        </div>
-        <div class="sbox">
-          <span>&nbsp;</span>
-          <button class="btn-ghost" id="refreshModels">刷新模型列表</button>
-        </div>
-      </div>
-      <div class="srow" id="modelRow">
-        <div class="sbox" style="flex:1;min-width:260px">
-          <span id="modelLabel">模型（SVG 模式用对话 / 视觉模型）</span>
-          <select id="model"></select>
-        </div>
-      </div>
-      <div class="hint" id="pdfModelHint">PDF 按绘图意图提取会使用当前服务商的对话 / 文本模型；位图模型只负责最后的图片生成。</div>
-      <div class="srow" id="analyzeModelRow" hidden>
-        <div class="sbox" style="flex:1;min-width:260px">
-          <span>归纳用视觉理解模型（两阶段第一步，需能看图）</span>
-          <select id="analyzeModel"></select>
-        </div>
-      </div>
-      <div class="chkline"><input type="checkbox" id="useRelay"><label for="useRelay">使用中转 / 自定义接入地址（官方接口浏览器直连受限时勾选）</label></div>
-      <div class="srow" id="relayRow" hidden>
-        <div class="sbox" style="flex:1;min-width:260px">
-          <span>接入 Base URL（OpenAI 兼容，如中转网关地址）</span>
-          <input type="text" id="baseOverride" placeholder="例如 https://your-relay.com/v1">
-        </div>
-      </div>
-      <div class="srow" id="customModelRow" hidden>
-        <div class="sbox" style="flex:1;min-width:220px">
-          <span>模型 ID（自定义/中转处的模型名）</span>
-          <input type="text" id="customModel" placeholder="例如 claude-opus-5-5 或 gpt-5">
-        </div>
-      </div>
-      <div class="hint" id="baseHint"></div>
-      <div class="corsnote" id="corsNote" hidden></div>
-      <div class="hint" id="manifestHint"></div>
+      <summary>出图模型（复用步骤一的服务商与 Key）</summary>
+      <div class="srow"><div class="tabs" id="modeTabs"><button data-mode="svg" class="on">SVG 可编辑初稿（推荐，文字准确）</button><button data-mode="image">AI 位图初稿（需要图像模型）</button></div></div>
+      <div class="srow" id="modelRow"><div class="sbox" style="flex:1;min-width:260px"><span id="modelLabel">最终出图模型（对话 / 视觉模型）</span><select id="model"></select></div></div>
+      <div class="hint" id="pdfModelHint">API Key 与服务商在步骤一配置；这里仅选择最终出图模型。SVG 使用对话 / 视觉模型，位图使用图像生成模型。</div>
+      <div class="srow" id="analyzeModelRow" hidden><div class="sbox" style="flex:1;min-width:260px"><span>归纳用视觉理解模型（两阶段第一步，需能看图）</span><select id="analyzeModel"></select></div></div>
     </details>
 
     <div id="genErr" class="errlist" hidden></div>
@@ -384,7 +354,6 @@
   <button class="forge-lb-nav next" id="forgeLbNext" aria-label="下一张">›</button>
 </div>
 
-<script src="./vendor/pdf.min.js"></script>
 <script type="module">
 import * as T from './vendor/transformers.min.js';
 
@@ -696,175 +665,103 @@ $('#targetDesc').oninput = ()=>localStorage.setItem('ff_target_desc', $('#target
   syncTarget();
 })();
 
-/* ---------------- PDF extraction (pdf.js) ---------------- */
+/* ---------------- PDF parsing (model-first; no PDF.js semantic fallback) ---------------- */
 let pdfContext = null;
+let pdfIntentSeq = 0;
 const TARGET_SECTION_HINTS = {
-  overview: ['introduction','contribution','abstract'],
-  architecture: ['method','methodology','approach','model','architecture','module','encoder','decoder'],
-  pipeline: ['method','methodology','approach','framework','pipeline','algorithm','procedure'],
-  results: ['experiment','evaluation','result','comparison','ablation','table','figure'],
-  custom: []
+  overview:'研究问题、核心方法、主要贡献、主要结果与应用价值',
+  architecture:'模型模块、编码器/解码器、组件连接关系、数据流与张量或输入输出',
+  pipeline:'按顺序描述输入、处理步骤、模块之间的数据流和最终输出',
+  results:'实验设置、评价指标、对比方法、消融结果与关键数字',
+  custom:'严格按照用户给出的章节、页码或关键词定位相关内容'
 };
-function cleanPdfText(s){ return (s||'').replace(/\s+/g,' ').trim(); }
-function sectionBlocks(full){
-  const text=cleanPdfText(full), out=[];
-  const heading=/\b((?:\d+(?:\.\d+)*\s+)?(?:abstract|introduction|related work|background|method(?:ology|s)?|approach|framework|pipeline|model|architecture|encoder|decoder|module|training(?: procedure)?|objective|loss|optimization|experiment(?:s)?|evaluation|result(?:s)?|comparison|ablation|conclusion))\b/ig;
-  const marks=[]; let m;
-  while((m=heading.exec(text))) marks.push({title:m[1].trim(),start:m.index,end:heading.lastIndex});
-  for(let i=0;i<marks.length;i++){
-    const cur=marks[i], next=marks[i+1];
-    const body=text.slice(cur.end,next?next.start:text.length).trim();
-    if(body.length>=40) out.push({title:cur.title,text:body});
+function parserModel(){
+  const p=$('#provider').value, c=cfg();
+  if(p==='custom') return $('#parseCustomModel').value.trim();
+  return $('#parseModel').value.trim() || (c.chat||[])[0] || (c.vision||[])[0] || '';
+}
+function parserInstruction(target, query){
+  const label=$('#target').selectedOptions[0]?.textContent||target;
+  const detail=$('#targetDesc').value.trim();
+  const focus=TARGET_SECTION_HINTS[target]||TARGET_SECTION_HINTS.overview;
+  return `你是科研论文图表策划器。请阅读附带的 PDF 论文，为“${label}”生成可靠的绘图内容提纲。${detail?`用户补充要求：${detail}。`:''}${query?`需要优先定位：${query}。`:''}\n目标重点：${focus}。\n请从论文实际内容中选择最相关的章节和连续段落，先保留标题、摘要和必要的上下文，再用自己的话忠实归纳；保留模块名、输入输出、流程顺序、指标和数字，不得编造。输出严格 JSON，不要 Markdown：{"title":"论文标题","abstract":"摘要或摘要要点","selectedSections":[{"section":"章节名/页码","summary":"该段落对绘图有用的忠实归纳","evidence":"可核对的原文短句或页码"}],"figurePrompt":"一段可直接交给出图模型的具体中文或英文提示词"}`;
+}
+function parseResponseText(d){
+  if(d?.output_text) return d.output_text;
+  if(Array.isArray(d?.output)) return d.output.flatMap(x=>x.content||[]).map(x=>x.text||'').join('');
+  if(Array.isArray(d?.content)) return d.content.filter(x=>x.type==='text').map(x=>x.text||'').join('');
+  return d?.choices?.[0]?.message?.content||'';
+}
+function pdfDataPart(){ return dataURIToParts(pdfContext.dataUri); }
+function extractJsonObject(txt){
+  const clean=(txt||'').replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'').trim();
+  const m=clean.match(/\{[\s\S]*\}/); if(!m) throw new Error('解析模型未返回 JSON');
+  try{return JSON.parse(m[0]);}catch(e){throw new Error('解析模型返回的 JSON 无法读取');}
+}
+async function callPdfParser(){
+  const c=cfg(), base=baseURL(), key=cleanKey($('#key').value), model=parserModel();
+  if(!base||!key||!model) throw new Error('请先在步骤一配置服务商、API Key 和论文解析模型');
+  const part=pdfDataPart(), instruction=parserInstruction($('#target').value,$('#contentQuery').value.trim());
+  if(!part) throw new Error('PDF 数据读取失败');
+  let r, body;
+  if(c.proto==='anthropic'){
+    body={model,max_tokens:5000,system:'只输出严格 JSON。',messages:[{role:'user',content:[{type:'document',source:{type:'base64',media_type:part.media||'application/pdf',data:part.data}},{type:'text',text:instruction}]}]};
+    r=await fetchWithTimeout(base+'/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},body:JSON.stringify(body)},120000);
+  }else if(c.proto==='oai' && /openai\.com/i.test(base)){
+    body={model,input:[{role:'user',content:[{type:'input_file',filename:pdfContext.fileName,file_data:pdfContext.dataUri},{type:'input_text',text:instruction}]}],max_output_tokens:5000};
+    r=await fetchWithTimeout(base+'/responses',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+key},body:JSON.stringify(body)},120000);
+  }else{
+    body={model,temperature:0.1,max_tokens:5000,messages:[{role:'system',content:'只输出严格 JSON。'},{role:'user',content:[{type:'file',file:{filename:pdfContext.fileName,file_data:pdfContext.dataUri}},{type:'text',text:instruction}]}]};
+    if($('#provider').value==='ark') body.thinking={type:'disabled'};
+    r=await postJSON(base,'/chat/completions',body,key);
   }
-  return out;
+  const raw=await r.text(); if(!r.ok) throw new Error(friendlyHttp(r.status,raw));
+  return extractJsonObject(parseResponseText(JSON.parse(raw)));
 }
-let pdfIntentSeq=0;
-function localPdfContext(mode,target){
-  let parts=[pdfContext.title,pdfContext.abstract];
-  if(mode==='basic') parts=[pdfContext.title,pdfContext.abstract,pdfContext.keywords];
-  if(mode==='intent'){
-    const hints=TARGET_SECTION_HINTS[target]||TARGET_SECTION_HINTS.overview;
-    const hits=pdfContext.sections.filter(s=>hints.some(h=>s.title.toLowerCase().includes(h))).slice(0,3);
-    parts.push(...hits.map(s=>s.title+': '+s.text.slice(0,1800)));
-    if(!hits.length) parts.push(pdfContext.method);
-  }
-  if(mode==='custom'){
-    const q=$('#contentQuery').value.trim().toLowerCase();
-    const hits=pdfContext.sections.filter(s=>q && (s.title+' '+s.text).toLowerCase().includes(q));
-    parts.push(...hits.slice(0,3).map(s=>s.title+': '+s.text.slice(0,2200)));
-    if(!hits.length && q) parts.push('未定位到精确章节，请根据以下论文文本人工核对： '+pdfContext.raw.slice(0,2600));
-  }
-  return parts.filter(Boolean).join('\n\n').slice(0,7000);
-}
-function intentCandidateSections(target){
-  const hints=TARGET_SECTION_HINTS[target]||TARGET_SECTION_HINTS.overview;
-  const scored=(pdfContext.sections||[]).map((s,i)=>{
-    const title=(s.title||'').toLowerCase();
-    const hit=hints.reduce((n,h)=>n+(title.includes(h)?1:0),0);
-    const body=(s.text||'').toLowerCase();
-    const detail=['module','flow','input','output','training','loss','evaluation','comparison','figure','table'].reduce((n,h)=>n+(body.includes(h)?1:0),0);
-    return {...s, _score:hit*10+Math.min(detail,8), _index:i};
-  }).sort((a,b)=>b._score-a._score || a._index-b._index);
-  return scored.slice(0,8);
-}
-function intentModelSource(target){
-  const candidates=intentCandidateSections(target);
-  const abstract=[pdfContext.title&&('标题：'+pdfContext.title),pdfContext.abstract&&('摘要：'+pdfContext.abstract),pdfContext.keywords&&('关键词：'+pdfContext.keywords)].filter(Boolean).join('\n');
-  const blocks=candidates.map((s,i)=>`[候选章节 ${i+1}] ${s.title}\n${s.text.slice(0,5200)}`).join('\n\n');
-  const fallback=!blocks ? pdfContext.raw.slice(0,65000) : '';
-  return [abstract,blocks||'[未可靠识别章节标题，以下为带页码的论文文本]\n'+fallback].filter(Boolean).join('\n\n').slice(0,75000);
-}
-function pdfExtractionModel(){
-  const c=cfg(), p=$('#provider').value, current=$('#model').value.trim();
-  // A custom provider has no manifest list, so use its explicit model ID.
-  // For managed providers always prefer a chat/text model when image mode is
-  // selected; the image model must never be used to select PDF passages.
-  if(p==='custom') return $('#customModel').value.trim();
-  const chats=(c.chat||[]).filter(Boolean);
-  if(chats.length) return chats.includes(current)?current:chats[0];
-  const vision=(c.vision||[]).filter(Boolean);
-  return vision.includes(current)?current:(vision[0]||current);
+function renderPdfSummary(data){
+  const sections=Array.isArray(data.selectedSections)?data.selectedSections.filter(x=>x&&x.summary).slice(0,6):[];
+  if(!sections.length) throw new Error('解析模型没有返回相关章节摘要');
+  const pieces=[data.title&&`标题：${data.title}`,data.abstract&&`摘要要点：${data.abstract}`,sections.map(x=>`【${x.section||'相关章节'}】${x.summary}${x.evidence?`\n证据：${x.evidence}`:''}`).join('\n\n'),data.figurePrompt&&`绘图提示词：${data.figurePrompt}`].filter(Boolean);
+  $('#paper').value=pieces.join('\n\n').slice(0,12000);
 }
 async function selectPdfContext(){
-  if(!pdfContext) return;
-  const mode=$('#contentMode').value, target=$('#target').value, seq=++pdfIntentSeq;
-  if(mode==='free') return;
-  if(mode!=='intent'){
-    $('#paper').value=localPdfContext(mode,target);
-    $('#contentModeHint').textContent=mode==='basic'?'已提取标题、摘要和关键词；适合总览图。':'内容范围由你控制，可继续手动编辑。';
-    $('#pdfExtractionMeta').textContent=mode==='basic'?'当前使用 PDF.js 本地提取：标题、摘要、关键词。':'当前使用 PDF.js 本地定位：你可以继续手动核对和编辑。';
-    return;
-  }
-  const c=cfg(), base=baseURL(), key=cleanKey($('#key').value), model=pdfExtractionModel();
-  if(!base||!key||!model){
-    $('#paper').value=localPdfContext(mode,target);
-    $('#contentModeHint').textContent='未配置可用的文本模型 API，已使用本地章节规则；配置 Key 后可用大模型语义筛选。';
-    $('#pdfExtractionMeta').textContent='PDF.js 已完成本地解析；当前没有调用文本模型（配置服务商、Key 和对话模型后重试）。';
-    return;
-  }
-  $('#contentModeHint').textContent='正在调用当前服务商的文本模型，按绘图意图理解论文章节…';
-  $('#pdfExtractionMeta').textContent=`PDF.js 已完成本地解析，正在把候选章节交给文本模型（${model}）筛选；不会发送 API Key。`;
-  const targetLabel=$('#target').selectedOptions[0]?.textContent||target;
-  const targetDetail=$('#targetDesc').value.trim();
-  const source=intentModelSource(target);
-  const instruction=`你是论文结构抽取器。用户要生成“${targetLabel}”${targetDetail?`，补充要求是“${targetDetail}”`:''}。从候选章节或带页码正文中选择最相关的 1-3 个连续段落；概览优先保留研究问题、核心方法、主要贡献和结果，架构优先保留模块与数据流，Pipeline 优先保留步骤顺序与输入输出，结果图优先保留指标、比较和消融。保留可用于绘图的具体名词、数字、模块关系，不要编造信息，不要把多个不连续段落拼成一个假原文。仅返回严格 JSON：{"sections":[{"title":"章节名或页码","text":"原文连续片段或忠实压缩，最多 2600 字"}]}`;
+  if(!pdfContext || $('#contentMode').value==='free') return;
+  const seq=++pdfIntentSeq, mode=$('#contentMode').value;
+  $('#contentModeHint').textContent='正在把 PDF 发送给步骤一配置的解析模型，按绘图意图提取并总结章节…';
+  $('#pdfExtractionMeta').textContent=`解析模型：${parserModel()||'未选择'}；PDF 不会走本地 PDF.js 语义提取。`;
   try{
-    let txt;
-    if(c.proto==='anthropic'){
-      const r=await fetch(base+'/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},body:JSON.stringify({model,max_tokens:5000,system:instruction,messages:[{role:'user',content:source}]})});
-      txt=await r.text(); if(!r.ok) throw new Error('HTTP '+r.status); const d=JSON.parse(txt); txt=(d.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
-    }else{
-      const body={model,temperature:0.1,max_tokens:5000,messages:[{role:'system',content:instruction},{role:'user',content:source}]};
-      if($('#provider').value==='ark') body.thinking={type:'disabled'};
-      const r=await postJSON(base,'/chat/completions',body,key); txt=await r.text(); if(!r.ok) throw new Error('HTTP '+r.status); txt=JSON.parse(txt).choices?.[0]?.message?.content||'';
-    }
-    const match=txt.match(/\{[\s\S]*\}/); const data=match?JSON.parse(match[0]):null;
-    const sections=(data?.sections||[]).filter(s=>s&&s.text).slice(0,3);
-    if(!sections.length) throw new Error('模型未返回可用章节');
-    if(seq!==pdfIntentSeq) return;
-    $('#paper').value=[pdfContext.title,pdfContext.abstract,...sections.map(s=>s.title+': '+s.text)].filter(Boolean).join('\n\n').slice(0,7000);
-    $('#contentModeHint').textContent='已由当前文本模型按绘图意图提取相关章节，并与摘要组合；仅发送选中的片段。';
-    $('#pdfExtractionMeta').textContent=`PDF.js 本地解析 ${pdfContext.pageCount} 页；文本模型 ${model} 已筛选 ${sections.length} 段，结果可继续手动编辑。`;
+    const result=await callPdfParser(); if(seq!==pdfIntentSeq) return;
+    renderPdfSummary(result);
+    $('#contentModeHint').textContent='已由解析模型按绘图意图选择章节、归纳段落并组合绘图提示词；结果可继续手动编辑。';
+    $('#pdfExtractionMeta').textContent=`${pdfContext.fileName} · 已由 ${parserModel()} 完成模型解析，共返回 ${result.selectedSections.length} 个相关段落。`;
   }catch(err){
     if(seq!==pdfIntentSeq) return;
-    $('#paper').value=localPdfContext(mode,target);
-    $('#contentModeHint').textContent='文本模型提取失败，已降级为本地章节规则；可重试或手动调整。';
-    $('#pdfExtractionMeta').textContent=`PDF.js 已解析 ${pdfContext.pageCount} 页；本次未得到模型结果，当前显示本地规则兜底内容。`;
-    showErr('按绘图意图调用文本模型失败：'+err.message);
+    $('#contentModeHint').textContent='模型解析失败；请更换支持 PDF / 文档输入的模型，或改用自由输入。';
+    $('#pdfExtractionMeta').textContent='未生成本地兜底文本，避免把低质量抽取误当成模型结果。';
+    showErr('PDF 模型解析失败：'+err.message);
   }
 }
 function syncContentMode(){
   const mode=$('#contentMode').value; $('#contentQueryRow').hidden=mode!=='custom';
-  $('#contentModeHint').textContent=mode==='free'?'自由输入模式：PDF 只在本地解析，不会改写下面的提示词。':mode==='basic'?'上传 PDF 后由 PDF.js 在本地提取标题、摘要和关键词；适合总览图。':mode==='intent'?'上传 PDF 后先由 PDF.js 本地取字，再由当前服务商的文本模型按绘图意图筛选相关章节，并与摘要组合成提示词。':'输入章节标题、页码或关键词，使用 PDF.js 本地定位并精确控制送入模型的论文片段。';
+  $('#contentModeHint').textContent=mode==='free'?'自由输入模式：不会自动调用解析模型。':mode==='basic'?'由步骤一解析模型提取标题、摘要和关键词，适合总览图。':mode==='intent'?'由步骤一解析模型按绘图意图选择相关章节并总结，再与摘要组合提示词。':'解析模型按你提供的章节、页码或关键词定位并总结相关段落。';
   if(pdfContext && mode!=='free') selectPdfContext();
 }
 $('#contentMode').onchange=syncContentMode;
-$('#contentQuery').oninput=()=>{ if($('#contentMode').value==='custom') selectPdfContext(); };
-$('#target').addEventListener('change',()=>{ if(pdfContext && $('#contentMode').value==='intent') selectPdfContext(); });
-$('#uploadBtn').onclick = ()=>$('#pdfFile').click();
-$('#pdfFile').onchange = async e=>{
-  const file = e.target.files[0]; if(!file) return;
-  const btn = $('#uploadBtn'); btn.disabled=true; btn.textContent='解析中…';
+$('#contentQuery').oninput=()=>{ if($('#contentMode').value==='custom'&&pdfContext) selectPdfContext(); };
+$('#target').addEventListener('change',()=>{ if(pdfContext && $('#contentMode').value!=='free') selectPdfContext(); });
+$('#targetDesc').addEventListener('input',()=>{ if(pdfContext && $('#contentMode').value!=='free') selectPdfContext(); });
+$('#uploadBtn').onclick=()=>$('#pdfFile').click();
+$('#pdfFile').onchange=async e=>{
+  const file=e.target.files[0]; if(!file)return;
+  const btn=$('#uploadBtn'); btn.disabled=true; btn.textContent='读取 PDF…';
   try{
-    const buf = await file.arrayBuffer();
-    pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('vendor/pdf.worker.min.js', document.baseURI).href;
-    const pdf = await pdfjsLib.getDocument({data:buf}).promise;
-    const n = Math.min(80, pdf.numPages);
-    const p1 = await pdf.getPage(1);
-    const vp = p1.getViewport({scale:1});
-    const tc = await p1.getTextContent();
-    const top = tc.items.filter(it=>it.transform[5] > 0.6*vp.height && (it.str||'').trim());
-    let title='';
-    if(top.length){
-      const sizes={}; top.forEach(it=>sizes[it.height]=(sizes[it.height]||0)+(it.str||'').length);
-      const big = Object.keys(sizes).sort((a,b)=>b-a)[0];
-      title = top.filter(it=>String(it.height)===big).map(it=>it.str).join(' ');
-      title = title.replace(/^\s*(preprint|accepted|published|under review|arxiv|doi:?|copyright|©|\d{4}\s*ieee).*$/gim,'').trim();
-    }
-    const pages=[];
-    for(let pi=1;pi<=n;pi++){
-      const pg = await pdf.getPage(pi);
-      const cc = await pg.getTextContent();
-      pages.push(cleanPdfText(cc.items.map(it=>it.str).join(' ')));
-    }
-    const full = pages.join('\n');
-    const paged = pages.map((text,i)=>`[Page ${i+1}] ${text}`).join('\n');
-    let abstract='';
-    const am = full.match(/abstract[\s—\-:.\n]+(.+?)(?:\n\s*(?:1\.?\s*)?(?:introduction|related work)\b|index terms|keywords)/is);
-    if(am) abstract = am[1].replace(/\s+/g,' ').trim();
-    let method='';
-    const mm = full.match(/^\s*(?:\d{1,2}\s*)?(?:method|methods|methodology|our approach|approach)\s*$([\s\S]+?)(?:^\s*(?:\d{1,2}\s*)?(?:experiments|evaluation|results|conclusion)\s*$)/im);
-    if(mm) method = ('Method excerpt: ' + mm[1].replace(/\s+/g,' ').trim()).slice(0,1600);
-    const keywords=(full.match(/(?:keywords|index terms)[:\s]+(.+?)(?:\n|$)/i)||[])[1]||'';
-    pdfContext={raw:paged,title,abstract,method,keywords:cleanPdfText(keywords),sections:sectionBlocks(full),pageCount:n,totalPages:pdf.numPages};
-    $('#pdfExtractionMeta').textContent=`PDF.js 已在本地解析 ${n} 页${n<pdf.numPages?'（为避免浏览器卡顿，未读取剩余页）':''}；等待内容模式决定是否调用文本模型。`;
-    if($('#contentMode').value!=='free') selectPdfContext();
-    if(!abstract) showErr('未识别到摘要；按绘图意图时会交由当前文本模型根据候选章节提取，仍可手动调整。');
-  }catch(err){
-    showErr('PDF 解析失败：'+err.message+'（请确认是可复制文字的 PDF，非扫描图片）');
-  }finally{
-    btn.disabled=false; btn.textContent='上传 PDF 自动提取'; e.target.value='';
-  }
+    if(file.size>25*1024*1024) throw new Error('PDF 超过 25 MB，请压缩文件或粘贴需要解析的章节文本');
+    const dataUri=await fileToDataURI(file);
+    pdfContext={fileName:file.name,mime:file.type||'application/pdf',dataUri,size:file.size};
+    $('#pdfExtractionMeta').textContent=`已读取 ${file.name}（${Math.round(file.size/1024)} KB）；等待解析模型处理。`;
+    if($('#contentMode').value!=='free') await selectPdfContext();
+  }catch(err){ showErr('PDF 读取失败：'+err.message); }
+  finally{ btn.disabled=false; btn.textContent='上传 PDF 自动提取'; e.target.value=''; }
 };
 
 /* ---------------- reference images -> data URI ---------------- */
@@ -950,6 +847,22 @@ async function populateModels(){
   if(saved && [...s.options].some(o=>o.value===saved)) s.value=saved;
   if(mode==='image' && passMode==='two') populateAnalyzeModels();
 }
+async function populateParserModels(){
+  const p=$('#provider').value, c=cfg(), s=$('#parseModel'); s.innerHTML='';
+  if(p==='custom'){
+    s.appendChild(option('请在下方填写解析模型 ID')); s.options[0].disabled=true;
+    $('#parseCustomModelRow').hidden=false;
+    return;
+  }
+  $('#parseCustomModelRow').hidden=true;
+  const models=[...(c.chat||[]),...(c.vision||[])];
+  if(models.length){ const g=optgroup('对话 / 视觉解析模型'); [...new Set(models)].forEach(m=>g.appendChild(option(m))); s.appendChild(g); }
+  const res=await fetchOnlineModels();
+  const online=res.list.filter(m=>kindOf(m)!=='image');
+  if(online.length){ const g=optgroup('账号已开通（实时拉取）'); [...new Set(online)].forEach(m=>g.appendChild(option(m))); s.appendChild(g); }
+  const saved=localStorage.getItem('ff_parse_model_'+p);
+  if(saved && [...s.options].some(o=>o.value===saved)) s.value=saved;
+}
 async function populateAnalyzeModels(){
   const c=cfg(), s=$('#analyzeModel'); s.innerHTML='';
   if(c.vision.length){ const g=optgroup('视觉理解模型（可看图归纳）'); c.vision.forEach(m=>g.appendChild(option(m))); s.appendChild(g); }
@@ -969,11 +882,13 @@ function initProviders(){
   Object.entries(MAN.providers).forEach(([k,v])=>{ const o=option(k); o.textContent=v.label; s.appendChild(o); });
   s.value = localStorage.getItem('ff_provider')||'ark';
   restoreProviderState(s.value);
+  populateParserModels();
 }
 function restoreProviderState(p){
   $('#key').value = localStorage.getItem('ff_key_'+p)||'';
   $('#baseOverride').value = localStorage.getItem('ff_base_'+p)||'';
   $('#customModel').value = localStorage.getItem('ff_cmodel_'+p)||'';
+  $('#parseCustomModel').value = localStorage.getItem('ff_parse_cmodel_'+p)||'';
   const c = cfg();
   const needRelay = c.cors===false;
   $('#useRelay').checked = needRelay || localStorage.getItem('ff_relay_'+p)==='1';
@@ -982,20 +897,23 @@ function restoreProviderState(p){
   $('#corsNote').hidden = !needRelay;
   if(needRelay) $('#corsNote').innerHTML = '⚠ 该服务商官方接口未开放浏览器跨域直连（实测）。两种用法：① 勾选上方中转并填入 OpenAI 兼容中转地址；② 也可直接改用支持 CORS 的服务商（火山方舟 / 硅基流动 / 智谱 / Kimi / Qwen / DeepSeek）。';
   $('#baseHint').textContent = '接口地址：'+(baseURL()||'（待填写）');
+  populateParserModels();
 }
 $('#provider').onchange = async e=>{
   localStorage.setItem('ff_provider', e.target.value);
   restoreProviderState(e.target.value);
-  await populateModels();
+  await Promise.all([populateModels(),populateParserModels()]);
 };
 $('#key').oninput = e=>{ e.target.value=cleanKey(e.target.value); localStorage.setItem('ff_key_'+$('#provider').value, e.target.value); };
 $('#baseOverride').oninput = e=>{ localStorage.setItem('ff_base_'+$('#provider').value, e.target.value); $('#baseHint').textContent='接口地址：'+(baseURL()||'（待填写）'); };
 $('#customModel').oninput = e=>localStorage.setItem('ff_cmodel_'+$('#provider').value, e.target.value);
+$('#parseModel').onchange = e=>localStorage.setItem('ff_parse_model_'+$('#provider').value,e.target.value);
+$('#parseCustomModel').oninput = e=>localStorage.setItem('ff_parse_cmodel_'+$('#provider').value,e.target.value);
 $('#useRelay').onchange = e=>{
   $('#relayRow').hidden = !e.target.checked;
   localStorage.setItem('ff_relay_'+$('#provider').value, e.target.checked?'1':'0');
 };
-$('#refreshModels').onclick = populateModels;
+$('#refreshModels').onclick = ()=>Promise.all([populateModels(),populateParserModels()]);
 document.querySelectorAll('#modeTabs button').forEach(b=>b.onclick=async ()=>{
   document.querySelectorAll('#modeTabs button').forEach(x=>x.classList.remove('on'));
   b.classList.add('on'); mode=b.dataset.mode;
@@ -1132,11 +1050,14 @@ function friendlyHttp(status, txt){
   return '服务商返回错误（HTTP '+status+'）：'+txt.slice(0,200);
 }
 function postJSON(base, path, body, key, extraHeaders, timeoutMs=90000){
+  return fetchWithTimeout(base+path,{method:'POST',
+    headers:{'Content-Type':'application/json',Authorization:'Bearer '+key,...extraHeaders},
+    body:JSON.stringify(body)},timeoutMs);
+}
+function fetchWithTimeout(url, options={}, timeoutMs=90000){
   const ac=new AbortController();
   const to=setTimeout(()=>ac.abort(new DOMException('timeout','TimeoutError')),timeoutMs);
-  return fetch(base+path,{method:'POST',
-    headers:{'Content-Type':'application/json',Authorization:'Bearer '+key,...extraHeaders},
-    body:JSON.stringify(body),signal:ac.signal}).finally(()=>clearTimeout(to));
+  return fetch(url,{...options,signal:ac.signal}).finally(()=>clearTimeout(to));
 }
 /* When a POST fails at network level, find out WHY. Some providers (Ark) do
    not allow browser CORS on /models, and omit CORS headers on error responses,
@@ -1389,7 +1310,7 @@ $('#searchBtn').onclick = async ()=>{
 /* ---------------- go ---------------- */
 await boot();
 initProviders();
-populateModels();
+await Promise.all([populateModels(), populateParserModels()]);
 $('#manifestHint').textContent = '模型清单更新于 '+MAN.updated+'：每次打开自动检查清单更新；填入 Key 后实时拉取账号已开通模型，新模型发布即自动出现，无需更新页面。';
 </script>
 </body>
