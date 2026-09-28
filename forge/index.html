@@ -386,6 +386,12 @@
 <script type="module">
 import * as T from './vendor/transformers.min.js';
 
+// Keep the large local index/CLIP assets across reloads and page re-entry.
+// The worker is same-origin and never sees API keys or provider requests.
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js', {scope:'./'}).catch(()=>{});
+}
+
 const $ = s => document.querySelector(s);
 const cleanKey = s => (s||'').replace(/\s+/g,'');
 const esc = s => (s+'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
