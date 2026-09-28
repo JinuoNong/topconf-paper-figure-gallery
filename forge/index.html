@@ -1277,7 +1277,19 @@ async function genOaiImage(base,model,key,content,p,refIds,layoutGuide){
     delete body.image; usedRefs=false;
     try{ r = await postJSON(base,'/images/generations',body,key,undefined,150000); txt=await r.text(); }catch(e){}
   }
-  if(!r.ok) throw new Error(friendlyHttp(r.status,txt));
+  if(!r.ok){
+    if(r.status===404){
+      // A hosted model manifest is only a suggestion: each user's provider
+      // account may expose a different set of image models. Prefer the
+      // account-specific diagnosis when /models is readable, then give a
+      // concrete recovery path instead of the generic 404 message.
+      let diag='';
+      try{ diag=await diagnoseConnection(base,key,model,'image'); }catch{}
+      if(diag && !diag.startsWith('无法连接模型服务器')) throw new Error(diag);
+      throw new Error('图像模型「'+model+'」无法调用：当前账号可能未开通该模型，或模型 ID 已更新。请点击“刷新模型列表”，从“你的账号已开通”中选择；如果列表无法读取，请到服务商控制台确认 Seedream 权限。');
+    }
+    throw new Error(friendlyHttp(r.status,txt));
+  }
   const d = JSON.parse(txt);
   const item = d.data?.[0] || d.images?.[0];
   if(!item) throw new Error('图像接口返回格式异常：'+txt.slice(0,200));
