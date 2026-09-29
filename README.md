@@ -19,6 +19,8 @@
 ![Last commit](https://img.shields.io/github/last-commit/qwdwqfwq/topconf-paper-figure-gallery)
 ![Stars](https://img.shields.io/github/stars/qwdwqfwq/topconf-paper-figure-gallery?style=social)
 
+<img src="docs/star-hint.gif" alt="点右上角给个 Star · Star us on GitHub" width="320">
+
 **Before you design your paper's Figure 1, see how the best papers do it.**
 A searchable, filterable gallery of well-designed Figure 1 / teaser figures — pure static
 HTML/CSS/JS, no build step, works offline.
