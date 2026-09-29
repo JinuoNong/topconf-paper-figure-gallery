@@ -1006,7 +1006,7 @@ async function analyzeReferences(){
     let r;
     try{ r=await postJSON(baseURL(),'/chat/completions',body,cleanKey($('#key').value)); }
     catch(e){
-      if(e.name==='TimeoutError') throw new Error('归纳超时（已等待 90 秒），请稍后重试或换用更快的视觉模型。');
+      if(e.name==='TimeoutError') throw new Error('归纳超时（已等待 5 分钟），请稍后重试或换用更快的视觉模型。');
       const diag=await diagnoseConnection(baseURL(),cleanKey($('#key').value),am);
       throw new Error(diag || '归纳请求被网络或浏览器拦截，可重试，或勾选“使用中转”填入中转地址。');
     }
@@ -1080,12 +1080,12 @@ function friendlyHttp(status, txt){
   if(status===400) return '请求被服务商拒绝：'+txt.slice(0,200);
   return '服务商返回错误（HTTP '+status+'）：'+txt.slice(0,200);
 }
-function postJSON(base, path, body, key, extraHeaders, timeoutMs=90000){
+function postJSON(base, path, body, key, extraHeaders, timeoutMs=300000){
   return fetchWithTimeout(base+path,{method:'POST',
     headers:{'Content-Type':'application/json',Authorization:'Bearer '+key,...extraHeaders},
     body:JSON.stringify(body)},timeoutMs);
 }
-function fetchWithTimeout(url, options={}, timeoutMs=90000){
+function fetchWithTimeout(url, options={}, timeoutMs=300000){
   const ac=new AbortController();
   const to=setTimeout(()=>ac.abort(new DOMException('timeout','TimeoutError')),timeoutMs);
   return fetch(url,{...options,signal:ac.signal}).finally(()=>clearTimeout(to));
@@ -1195,7 +1195,7 @@ async function genOaiSVG(base,model,key,content,p,refIds,layoutGuide){
   let r;
   try{ r = await postJSON(base,'/chat/completions',body,key); }
   catch(e){
-    if(e.name==='TimeoutError') throw new Error('生成超时（已等待 90 秒），模型可能繁忙，请稍后重试或换更快的模型。');
+    if(e.name==='TimeoutError') throw new Error('生成超时（已等待 5 分钟），模型可能繁忙，请稍后重试或换更快的模型。');
     const diag=await diagnoseConnection(base,key,model);
     throw new Error(diag || '请求被网络或浏览器拦截，可重试，或勾选“使用中转”填入中转地址。');
   }
@@ -1288,16 +1288,16 @@ async function genOaiImage(base,model,key,content,p,refIds,layoutGuide){
     usedRefs=true;
   }
   let r;
-  try{ r = await postJSON(base,'/images/generations',body,key,undefined,150000); }
+  try{ r = await postJSON(base,'/images/generations',body,key,undefined,300000); }
   catch(e){
-    if(e.name==='TimeoutError') throw new Error('生成超时（已等待约 150 秒），模型可能繁忙，请稍后重试；也可换更快的模型（如硅基流动 FLUX schnell）。');
+    if(e.name==='TimeoutError') throw new Error('生成超时（已等待 5 分钟），模型可能繁忙，请稍后重试；也可换更快的模型（如硅基流动 FLUX schnell）。');
     const diag=await diagnoseConnection(base,key,model,'image');
     throw new Error(diag || '请求被网络或浏览器拦截，可重试，或勾选“使用中转”填入中转地址。');
   }
   let txt = await r.text();
   if(!r.ok && usedRefs){
     delete body.image; usedRefs=false;
-    try{ r = await postJSON(base,'/images/generations',body,key,undefined,150000); txt=await r.text(); }catch(e){}
+    try{ r = await postJSON(base,'/images/generations',body,key,undefined,300000); txt=await r.text(); }catch(e){}
   }
   if(!r.ok){
     if(r.status===404){
