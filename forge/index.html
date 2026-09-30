@@ -261,6 +261,13 @@
         <div class="sbox" style="flex:1;min-width:260px"><span>论文解析模型（对话 / 视觉模型）</span><select id="parseModel"></select></div>
       </div>
       <div class="srow" id="parseCustomModelRow" hidden><div class="sbox" style="flex:1;min-width:220px"><span>解析模型 ID（自定义 / 中转）</span><input type="text" id="parseCustomModel" placeholder="例如 gpt-4.1 或 gemini-2.5-pro"></div></div>
+      <!-- 解析可以用另一家的文本模型：默认「与上方同一服务商」，不填即维持原行为 -->
+      <div class="srow" id="parseEndpointRow">
+        <div class="sbox"><span>解析用服务商</span><select id="parseProvider"></select></div>
+        <div class="sbox" style="flex:1;min-width:210px"><span>解析用 API Key（与上方同一家时可留空）</span><input type="password" id="parseKey" placeholder="跨服务商时填这一家的 Key"></div>
+        <div class="sbox" style="flex:1;min-width:200px"><span>解析用 Base URL（可选）</span><input type="text" id="parseBase" placeholder="留空 = 该服务商默认地址"></div>
+      </div>
+      <div class="hint" id="parseHint"></div>
       <div class="hint">PDF 会直接发送给这里选择的模型；模型负责按绘图意图定位章节、归纳段落并生成可用于出图的内容。扫描 PDF 是否可读取取决于服务商的文档 / 视觉能力。</div>
       <div class="chkline"><input type="checkbox" id="useRelay"><label for="useRelay">使用中转 / 自定义接入地址（官方接口浏览器直连受限时勾选）</label></div>
       <div class="srow" id="relayRow" hidden><div class="sbox" style="flex:1;min-width:260px"><span>接入 Base URL（OpenAI 兼容，如中转网关地址）</span><input type="text" id="baseOverride" placeholder="例如 https://your-relay.com/v1"></div></div>
@@ -698,8 +705,47 @@ const TARGET_SECTION_HINTS = {
   results:'实验设置、评价指标、对比方法、消融结果与关键数字',
   custom:'严格按照用户给出的章节、页码或关键词定位相关内容'
 };
+/* ---- 步骤一（解析）的接口可与步骤二不同：默认「与上方同一服务商」，即原行为 ---- */
+const PARSE_SAME = '__same__';
+const parseProviderKey = ()=>{ const v=$('#parseProvider')?.value; return (!v||v===PARSE_SAME) ? $('#provider').value : v; };
+const parseIsSplit = ()=> parseProviderKey()!==$('#provider').value;
+const parseCfg = ()=> MAN.providers[parseProviderKey()] || cfg();
+const parseKey = ()=> cleanKey($('#parseKey')?.value||'') || (parseIsSplit() ? '' : cleanKey($('#key').value));
+const parseBaseURL = ()=>{
+  const ov=($('#parseBase')?.value||'').trim().replace(/\/+$/,'');
+  if(ov) return ov;
+  return parseIsSplit() ? (parseCfg().base||'').replace(/\/+$/,'') : baseURL();
+};
+function restoreParseEndpoint(){
+  const p=parseProviderKey(), k=$('#parseKey'), b=$('#parseBase'), cm=$('#parseCustomModel');
+  if(k) k.value=localStorage.getItem('ff_parse_key_'+p)||'';
+  if(b) b.value=localStorage.getItem('ff_parse_base_'+p)||'';
+  if(cm) cm.value=localStorage.getItem('ff_parse_cmodel_'+p)||'';
+  syncParseHint();
+}
+function initParseProviderSelect(){
+  const s=$('#parseProvider'); if(!s) return;
+  s.innerHTML='';
+  const o0=option(PARSE_SAME); o0.value=PARSE_SAME; o0.textContent='与上方同一服务商（默认）'; s.appendChild(o0);
+  Object.entries(MAN.providers).forEach(([k,v])=>{ const o=option(k); o.value=k; o.textContent=v.label; s.appendChild(o); });
+  s.value = localStorage.getItem('ff_parse_provider') || PARSE_SAME;
+  restoreParseEndpoint();
+}
+function syncParseHint(){
+  const el=$('#parseHint'); if(!el) return;
+  const here=$('#provider').selectedOptions[0];
+  if(!parseIsSplit()){
+    el.textContent='解析与出图使用同一服务商'+(here?'（'+here.textContent+'）':'')+'。若这家没有能读论文的对话 / 视觉模型，可把「解析用服务商」改成别家：解析只走它的文本模型，出图仍用上面的配置。';
+    return;
+  }
+  const c=parseCfg();
+  const missingKey = parseIsSplit() && !cleanKey($('#parseKey')?.value||'');
+  let t='双接口：解析走 '+(c.label||parseProviderKey())+'（'+($('#parseModel').value||'未选模型')+'）→ 出图走 '+((here&&here.textContent)||$('#provider').value)+'（'+($('#model').value||'未选模型')+'）'+(missingKey?'；解析侧还没有 Key（不会把出图那家的 Key 发过去）':'');
+  if(c.cors===false && !($('#parseBase')?.value||'').trim()) t+='。⚠ 该服务商官方接口未开放浏览器直连，请在「解析用 Base URL」填入 OpenAI 兼容中转地址';
+  el.textContent=t+'。';
+}
 function parserModel(){
-  const p=$('#provider').value, c=cfg();
+  const p=parseProviderKey(), c=parseCfg();
   if(p==='custom') return $('#parseCustomModel').value.trim();
   return $('#parseModel').value.trim() || (c.chat||[])[0] || (c.vision||[])[0] || '';
 }
@@ -722,7 +768,7 @@ function extractJsonObject(txt){
   try{return JSON.parse(m[0]);}catch(e){throw new Error('解析模型返回的 JSON 无法读取');}
 }
 async function callPdfParser(){
-  const c=cfg(), base=baseURL(), key=cleanKey($('#key').value), model=parserModel();
+  const c=parseCfg(), base=parseBaseURL(), key=parseKey(), model=parserModel();
   if(!base||!key||!model) throw new Error('请先在步骤一配置服务商、API Key 和论文解析模型');
   const part=pdfDataPart(), instruction=parserInstruction($('#target').value,$('#contentQuery').value.trim());
   if(!part) throw new Error('PDF 数据读取失败');
@@ -735,7 +781,7 @@ async function callPdfParser(){
     r=await fetchWithTimeout(base+'/responses',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+key},body:JSON.stringify(body)},120000);
   }else{
     body={model,temperature:0.1,max_tokens:5000,messages:[{role:'system',content:'只输出严格 JSON。'},{role:'user',content:[{type:'file',file:{filename:pdfContext.fileName,file_data:pdfContext.dataUri}},{type:'text',text:instruction}]}]};
-    if($('#provider').value==='ark') body.thinking={type:'disabled'};
+    if(parseProviderKey()==='ark') body.thinking={type:'disabled'};
     r=await postJSON(base,'/chat/completions',body,key);
   }
   const raw=await r.text(); if(!r.ok) throw new Error(friendlyHttp(r.status,raw));
@@ -838,13 +884,17 @@ function baseURL(){
   return (ov || cfg().base).replace(/\/+$/,'');
 }
 const key_present = ()=>!!cleanKey($('#key').value);
-function fetchOnlineModels(){
-  const key = cleanKey($('#key').value), base = baseURL(), c = cfg();
-  if(!key || !base || c.proto!=='oai') return Promise.resolve({ok:false,list:[]});
+function fetchModelsFor(base, key){
+  if(!key || !base) return Promise.resolve({ok:false,list:[]});
   return fetch(base+'/models',{headers:{Authorization:'Bearer '+key}})
     .then(r=>r.ok ? r.json() : Promise.reject(new Error('http '+r.status)))
     .then(d=>({ok:true,list:(d.data||d.models||[]).map(x=>x.id||x.model||x.name).filter(Boolean)}))
     .catch(()=>({ok:false,list:[]}));
+}
+function fetchOnlineModels(){
+  const c = cfg();
+  if(c.proto!=='oai') return Promise.resolve({ok:false,list:[]});
+  return fetchModelsFor(baseURL(), cleanKey($('#key').value));
 }
 function optgroup(label){
   const g=document.createElement('optgroup'); g.label=label; return g;
@@ -879,20 +929,22 @@ async function populateModels(){
   if(mode==='image' && passMode==='two') populateAnalyzeModels();
 }
 async function populateParserModels(){
-  const p=$('#provider').value, c=cfg(), s=$('#parseModel'); s.innerHTML='';
+  const p=parseProviderKey(), c=parseCfg(), s=$('#parseModel'); s.innerHTML='';
   if(p==='custom'){
     s.appendChild(option('请在下方填写解析模型 ID')); s.options[0].disabled=true;
     $('#parseCustomModelRow').hidden=false;
+    syncParseHint();
     return;
   }
   $('#parseCustomModelRow').hidden=true;
   const models=[...(c.chat||[]),...(c.vision||[])];
   if(models.length){ const g=optgroup('对话 / 视觉解析模型'); [...new Set(models)].forEach(m=>g.appendChild(option(m))); s.appendChild(g); }
-  const res=await fetchOnlineModels();
+  const res = c.proto==='oai' ? await fetchModelsFor(parseBaseURL(), parseKey()) : {ok:false,list:[]};
   const online=res.list.filter(m=>kindOf(m)!=='image');
   if(online.length){ const g=optgroup('账号已开通（实时拉取）'); [...new Set(online)].forEach(m=>g.appendChild(option(m))); s.appendChild(g); }
   const saved=localStorage.getItem('ff_parse_model_'+p);
   if(saved && [...s.options].some(o=>o.value===saved)) s.value=saved;
+  syncParseHint();
 }
 async function populateAnalyzeModels(){
   const c=cfg(), s=$('#analyzeModel'); s.innerHTML='';
@@ -912,6 +964,7 @@ function initProviders(){
   const s = $('#provider');
   Object.entries(MAN.providers).forEach(([k,v])=>{ const o=option(k); o.textContent=v.label; s.appendChild(o); });
   s.value = localStorage.getItem('ff_provider')||'ark';
+  initParseProviderSelect();
   restoreProviderState(s.value);
   populateParserModels();
 }
@@ -919,7 +972,6 @@ function restoreProviderState(p){
   $('#key').value = localStorage.getItem('ff_key_'+p)||'';
   $('#baseOverride').value = localStorage.getItem('ff_base_'+p)||'';
   $('#customModel').value = localStorage.getItem('ff_cmodel_'+p)||'';
-  $('#parseCustomModel').value = localStorage.getItem('ff_parse_cmodel_'+p)||'';
   const c = cfg();
   const needRelay = c.cors===false;
   $('#useRelay').checked = needRelay || localStorage.getItem('ff_relay_'+p)==='1';
@@ -928,6 +980,7 @@ function restoreProviderState(p){
   $('#corsNote').hidden = !needRelay;
   if(needRelay) $('#corsNote').innerHTML = '⚠ 该服务商官方接口未开放浏览器跨域直连（实测）。两种用法：① 勾选上方中转并填入 OpenAI 兼容中转地址；② 也可直接改用支持 CORS 的服务商（火山方舟 / 硅基流动 / 智谱 / Kimi / Qwen / DeepSeek）。';
   $('#baseHint').textContent = '接口地址：'+(baseURL()||'（待填写）');
+  restoreParseEndpoint();   // 步骤二换服务商后，解析侧的 Key / Base / 自定义模型 ID 也要切过去
   populateParserModels();
 }
 $('#provider').onchange = async e=>{
@@ -935,11 +988,19 @@ $('#provider').onchange = async e=>{
   restoreProviderState(e.target.value);
   await Promise.all([populateModels(),populateParserModels()]);
 };
-$('#key').oninput = e=>{ e.target.value=cleanKey(e.target.value); localStorage.setItem('ff_key_'+$('#provider').value, e.target.value); };
+$('#key').oninput = e=>{ e.target.value=cleanKey(e.target.value); localStorage.setItem('ff_key_'+$('#provider').value, e.target.value); syncParseHint(); };
 $('#baseOverride').oninput = e=>{ localStorage.setItem('ff_base_'+$('#provider').value, e.target.value); $('#baseHint').textContent='接口地址：'+(baseURL()||'（待填写）'); };
 $('#customModel').oninput = e=>localStorage.setItem('ff_cmodel_'+$('#provider').value, e.target.value);
-$('#parseModel').onchange = e=>localStorage.setItem('ff_parse_model_'+$('#provider').value,e.target.value);
-$('#parseCustomModel').oninput = e=>localStorage.setItem('ff_parse_cmodel_'+$('#provider').value,e.target.value);
+$('#parseModel').onchange = e=>{ localStorage.setItem('ff_parse_model_'+parseProviderKey(),e.target.value); syncParseHint(); };
+$('#parseCustomModel').oninput = e=>localStorage.setItem('ff_parse_cmodel_'+parseProviderKey(),e.target.value);
+$('#parseProvider').onchange = async e=>{
+  localStorage.setItem('ff_parse_provider', e.target.value);
+  restoreParseEndpoint();
+  await populateParserModels();
+  if(pdfContext && $('#contentMode').value!=='free') selectPdfContext();   // 换了解析侧就按新配置重解析
+};
+$('#parseKey').oninput = e=>{ e.target.value=cleanKey(e.target.value); localStorage.setItem('ff_parse_key_'+parseProviderKey(), e.target.value); syncParseHint(); };
+$('#parseBase').oninput = e=>{ localStorage.setItem('ff_parse_base_'+parseProviderKey(), e.target.value.trim()); syncParseHint(); };
 $('#useRelay').onchange = e=>{
   $('#relayRow').hidden = !e.target.checked;
   localStorage.setItem('ff_relay_'+$('#provider').value, e.target.checked?'1':'0');
