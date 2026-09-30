@@ -268,7 +268,7 @@
         <div class="sbox" style="flex:1;min-width:200px"><span>解析用 Base URL（可选）</span><input type="text" id="parseBase" placeholder="留空 = 该服务商默认地址"></div>
       </div>
       <div class="hint" id="parseHint"></div>
-      <div class="hint">PDF 会直接发送给这里选择的模型；模型负责按绘图意图定位章节、归纳段落并生成可用于出图的内容。扫描 PDF 是否可读取取决于服务商的文档 / 视觉能力。</div>
+      <div class="hint">PDF 会发送给这里选择的模型；模型负责按绘图意图定位章节、归纳段落并生成可用于出图的内容。若该服务商的接口不收 PDF 文件本身（例如只有纯文本模型），页面会用仓库内置的 pdf.js 在本机取出文字再发送，解析仍然由模型完成。扫描 PDF 能否读取取决于服务商与文件本身。</div>
       <div class="chkline"><input type="checkbox" id="useRelay"><label for="useRelay">使用中转 / 自定义接入地址（官方接口浏览器直连受限时勾选）</label></div>
       <div class="srow" id="relayRow" hidden><div class="sbox" style="flex:1;min-width:260px"><span>接入 Base URL（OpenAI 兼容，如中转网关地址）</span><input type="text" id="baseOverride" placeholder="例如 https://your-relay.com/v1"></div></div>
       <div class="srow" id="customModelRow" hidden><div class="sbox" style="flex:1;min-width:220px"><span>出图模型 ID（自定义 / 中转）</span><input type="text" id="customModel" placeholder="例如 claude-opus-5-5 或 gpt-5"></div></div>
@@ -384,6 +384,7 @@
   <button class="forge-lb-nav next" id="forgeLbNext" aria-label="下一张">›</button>
 </div>
 
+<script defer src="./vendor/pdf.min.js"></script>
 <script type="module">
 import * as T from './vendor/transformers.min.js';
 
@@ -420,7 +421,7 @@ const TARGETS = {
 };
 
 /* FALLBACK：manifest 拉取失败（离线）时使用，与 forge/data/manifest.json 同口径 */
-const FALLBACK = {"updated":"2026-09-30","providers":{"ark":{"label":"火山方舟 Ark","base":"https://ark.cn-beijing.volces.com/api/v3","proto":"oai","cors":true,"chat":["doubao-seed-2-1-pro-260915","doubao-seed-2-1-lite-260915","doubao-seed-2-1-pro-260628","doubao-seed-2-1-turbo-260628","doubao-seed-evolving","doubao-seed-2-0-pro-260215","doubao-seed-2-0-lite-260428","doubao-seed-2-0-mini-260428","doubao-seed-character-260628"],"vision":["doubao-seed-2-1-pro-260915","doubao-seed-2-1-lite-260915","doubao-seed-2-1-pro-260628","doubao-seed-2-1-turbo-260628","doubao-seed-evolving","doubao-seed-2-0-pro-260215","doubao-seed-2-0-lite-260428"],"image":["doubao-seedream-5-0-pro-260628","doubao-seedream-5-0-flash-260915","doubao-seedream-5-0-260128","doubao-seedream-4-5-251128","doubao-seedream-4-0-250828"]},"sf":{"label":"硅基流动 SiliconFlow","base":"https://api.siliconflow.cn/v1","proto":"oai","cors":true,"chat":["deepseek-ai/DeepSeek-V3","Qwen/Qwen3-235B-A22B"],"vision":["Qwen/Qwen2.5-VL-72B-Instruct"],"image":["black-forest-labs/FLUX.1-schnell","Kwai-Kolors/Kolors"]},"glm":{"label":"智谱 GLM","base":"https://open.bigmodel.cn/api/paas/v4","proto":"oai","cors":true,"chat":["glm-4.5","glm-4.5-air"],"vision":["glm-4v-plus"],"image":["cogview-4"]},"ds":{"label":"DeepSeek","base":"https://api.deepseek.com","proto":"oai","cors":true,"chat":["deepseek-v4-pro","deepseek-flash"],"vision":[],"image":[]},"oai":{"label":"OpenAI","base":"https://api.openai.com/v1","proto":"oai","cors":true,"chat":["gpt-6.1-sol","gpt-6-sol","gpt-6-luna","gpt-6-astra","gpt-5.5","gpt-5.4"],"vision":["gpt-6.1-sol","gpt-6-sol","gpt-6-luna","gpt-6-astra","gpt-5.5","gpt-5.4"],"image":["gpt-image-2.5-sunburst","gpt-image-2.5-flare","gpt-image-2","gpt-image-1"]},"kimi":{"label":"Kimi 月之暗面","base":"https://api.moonshot.cn/v1","proto":"oai","cors":true,"chat":["kimi-k3","kimi-k2.6"],"vision":["kimi-k2.6"],"image":[]},"qwen":{"label":"通义千问 Qwen","base":"https://dashscope.aliyuncs.com/compatible-mode/v1","proto":"oai","cors":true,"chat":["qwen-max","qwen-plus"],"vision":["qwen-vl-max"],"image":["qwen-image"]},"hy":{"label":"腾讯混元 Hunyuan","base":"https://api.hunyuan.cloud.tencent.com/v1","proto":"oai","cors":false,"chat":["hunyuan-turbos-latest"],"vision":["hunyuan-vision"],"image":["hy-image-v3.5-preview"]},"claude":{"label":"Anthropic Claude","base":"https://api.anthropic.com","proto":"anthropic","cors":false,"chat":["claude-opus-5-5","claude-sonnet-5","claude-sonnet-4-6"],"vision":["claude-opus-5-5","claude-sonnet-5"],"image":[]},"custom":{"label":"自定义 OpenAI 兼容","base":"","proto":"oai","cors":true,"chat":[],"vision":[],"image":[]}}};
+const FALLBACK = {"updated":"2026-09-30","providers":{"ark":{"label":"火山方舟 Ark","base":"https://ark.cn-beijing.volces.com/api/v3","proto":"oai","cors":true,"chat":["doubao-seed-2-1-pro-260915","doubao-seed-2-1-lite-260915","doubao-seed-2-1-pro-260628","doubao-seed-2-1-turbo-260628","doubao-seed-evolving","doubao-seed-2-0-pro-260215","doubao-seed-2-0-lite-260428","doubao-seed-2-0-mini-260428","doubao-seed-character-260628"],"vision":["doubao-seed-2-1-pro-260915","doubao-seed-2-1-lite-260915","doubao-seed-2-1-pro-260628","doubao-seed-2-1-turbo-260628","doubao-seed-evolving","doubao-seed-2-0-pro-260215","doubao-seed-2-0-lite-260428"],"image":["doubao-seedream-5-0-pro-260628","doubao-seedream-5-0-flash-260915","doubao-seedream-5-0-260128","doubao-seedream-4-5-251128","doubao-seedream-4-0-250828"]},"sf":{"label":"硅基流动 SiliconFlow","base":"https://api.siliconflow.cn/v1","proto":"oai","cors":true,"chat":["deepseek-ai/DeepSeek-V3","Qwen/Qwen3-235B-A22B"],"vision":["Qwen/Qwen2.5-VL-72B-Instruct"],"image":["black-forest-labs/FLUX.1-schnell","Kwai-Kolors/Kolors"]},"glm":{"label":"智谱 GLM","base":"https://open.bigmodel.cn/api/paas/v4","proto":"oai","cors":true,"chat":["glm-4.5","glm-4.5-air"],"vision":["glm-4v-plus"],"image":["cogview-4"]},"ds":{"label":"DeepSeek","base":"https://api.deepseek.com","proto":"oai","cors":true,"doc":false,"json":true,"chat":["deepseek-v4-pro","deepseek-flash"],"vision":[],"image":[]},"oai":{"label":"OpenAI","base":"https://api.openai.com/v1","proto":"oai","cors":true,"chat":["gpt-6.1-sol","gpt-6-sol","gpt-6-luna","gpt-6-astra","gpt-5.5","gpt-5.4"],"vision":["gpt-6.1-sol","gpt-6-sol","gpt-6-luna","gpt-6-astra","gpt-5.5","gpt-5.4"],"image":["gpt-image-2.5-sunburst","gpt-image-2.5-flare","gpt-image-2","gpt-image-1"]},"kimi":{"label":"Kimi 月之暗面","base":"https://api.moonshot.cn/v1","proto":"oai","cors":true,"chat":["kimi-k3","kimi-k2.6"],"vision":["kimi-k2.6"],"image":[]},"qwen":{"label":"通义千问 Qwen","base":"https://dashscope.aliyuncs.com/compatible-mode/v1","proto":"oai","cors":true,"chat":["qwen-max","qwen-plus"],"vision":["qwen-vl-max"],"image":["qwen-image"]},"hy":{"label":"腾讯混元 Hunyuan","base":"https://api.hunyuan.cloud.tencent.com/v1","proto":"oai","cors":false,"chat":["hunyuan-turbos-latest"],"vision":["hunyuan-vision"],"image":["hy-image-v3.5-preview"]},"claude":{"label":"Anthropic Claude","base":"https://api.anthropic.com","proto":"anthropic","cors":false,"chat":["claude-opus-5-5","claude-sonnet-5","claude-sonnet-4-6"],"vision":["claude-opus-5-5","claude-sonnet-5"],"image":[]},"custom":{"label":"自定义 OpenAI 兼容","base":"","proto":"oai","cors":true,"chat":[],"vision":[],"image":[]}}};
 
 /* ---------------- boot: manifest + data + local CLIP ---------------- */
 async function loadManifest(){
@@ -695,7 +696,11 @@ $('#targetDesc').oninput = ()=>localStorage.setItem('ff_target_desc', $('#target
   syncTarget();
 })();
 
-/* ---------------- PDF parsing (model-first; no PDF.js semantic fallback) ---------------- */
+/* ---------------- PDF parsing (model-first; PDF.js only feeds text models) ----------------
+   The document itself goes to the model chosen in step one. Providers whose endpoint does
+   not take PDF input (text-only models) are marked "doc": false in the manifest: for those
+   the bundled pdf.js reads the text locally and the text is sent instead. The model still
+   does the parsing; this only changes how the paper reaches it. */
 let pdfContext = null;
 let pdfIntentSeq = 0;
 const TARGET_SECTION_HINTS = {
@@ -762,27 +767,67 @@ function parseResponseText(d){
   return d?.choices?.[0]?.message?.content||'';
 }
 function pdfDataPart(){ return dataURIToParts(pdfContext.dataUri); }
+/* 服务商是否接受 PDF 文件本身。manifest 里标了 "doc": false 的改用本机文本。 */
+const parserAcceptsPdf = ()=> parseCfg().doc!==false;
+/* 用内置 pdf.js 在本机取文字（只在需要时取一次，同一份 PDF 只解析一遍）。每页一行，页内用空格拼回。 */
+async function extractPdfText(dataUri, maxPages=12, cap=80000){
+  let pdf=null;
+  try{
+    if(typeof pdfjsLib==='undefined') throw new Error('pdf.js 没有加载（forge/vendor/pdf.min.js）');
+    const buf = await (await fetch(dataUri)).arrayBuffer();
+    pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('vendor/pdf.worker.min.js', document.baseURI).href;
+    pdf = await pdfjsLib.getDocument({data:buf}).promise;
+    const n = Math.min(maxPages, pdf.numPages), out = [];
+    for(let i=1;i<=n;i++){
+      const tc = await (await pdf.getPage(i)).getTextContent();
+      out.push(tc.items.map(it=>it.str).join(' '));
+    }
+    return out.join('\n').replace(/[ \t]+/g,' ').trim().slice(0,cap);
+  }catch(e){ console.warn('本机 PDF 文本提取失败：', e); return ''; }
+  finally{ try{ pdf && pdf.destroy(); }catch(e){} }
+}
+function pdfText(){
+  const ctx=pdfContext; if(!ctx) return Promise.resolve('');
+  if(ctx.text!=null) return Promise.resolve(ctx.text);
+  if(!ctx.textP) ctx.textP = extractPdfText(ctx.dataUri).then(t=>{ ctx.text=t; return t; });
+  return ctx.textP;
+}
 function extractJsonObject(txt){
   const clean=(txt||'').replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'').trim();
   const m=clean.match(/\{[\s\S]*\}/); if(!m) throw new Error('解析模型未返回 JSON');
-  try{return JSON.parse(m[0]);}catch(e){throw new Error('解析模型返回的 JSON 无法读取');}
+  for(const cand of [m[0], m[0].replace(/,(\s*[}\]])/g,'$1')]){   // 尾逗号容错一次
+    try{ return JSON.parse(cand); }catch(e){ /* 换下一种修补再试 */ }
+  }
+  throw new Error('解析模型返回的 JSON 无法读取');
 }
 async function callPdfParser(){
   const c=parseCfg(), base=parseBaseURL(), key=parseKey(), model=parserModel();
   if(!base||!key||!model) throw new Error('请先在步骤一配置服务商、API Key 和论文解析模型');
-  const part=pdfDataPart(), instruction=parserInstruction($('#target').value,$('#contentQuery').value.trim());
-  if(!part) throw new Error('PDF 数据读取失败');
+  const instruction=parserInstruction($('#target').value,$('#contentQuery').value.trim());
   let r, body;
-  if(c.proto==='anthropic'){
-    body={model,max_tokens:5000,system:'只输出严格 JSON。',messages:[{role:'user',content:[{type:'document',source:{type:'base64',media_type:part.media||'application/pdf',data:part.data}},{type:'text',text:instruction}]}]};
-    r=await fetchWithTimeout(base+'/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},body:JSON.stringify(body)},120000);
-  }else if(c.proto==='oai' && /openai\.com/i.test(base)){
-    body={model,input:[{role:'user',content:[{type:'input_file',filename:pdfContext.fileName,file_data:pdfContext.dataUri},{type:'input_text',text:instruction}]}],max_output_tokens:5000};
-    r=await fetchWithTimeout(base+'/responses',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+key},body:JSON.stringify(body)},120000);
-  }else{
-    body={model,temperature:0.1,max_tokens:5000,messages:[{role:'system',content:'只输出严格 JSON。'},{role:'user',content:[{type:'file',file:{filename:pdfContext.fileName,file_data:pdfContext.dataUri}},{type:'text',text:instruction}]}]};
+  if(!parserAcceptsPdf()){
+    const text=await pdfText();
+    if(!text) throw new Error('这份 PDF 在本机没能取出文字（可能是扫描件，或 pdf.js 没加载成功）；请改用支持文档 / 视觉输入的服务商，或改用自由输入粘贴正文');
+    body={model,temperature:0.1,max_tokens:5000,messages:[
+      {role:'system',content:'只输出严格 JSON。'},
+      {role:'user',content:instruction+'\n\n以下是论文正文（由浏览器本地提取，可能含排版噪声与页码，请自行判断取舍）：\n'+text}]};
+    if(c.json) body.response_format={type:'json_object'};
     if(parseProviderKey()==='ark') body.thinking={type:'disabled'};
     r=await postJSON(base,'/chat/completions',body,key);
+  }else{
+    const part=pdfDataPart();
+    if(!part) throw new Error('PDF 数据读取失败');
+    if(c.proto==='anthropic'){
+      body={model,max_tokens:5000,system:'只输出严格 JSON。',messages:[{role:'user',content:[{type:'document',source:{type:'base64',media_type:part.media||'application/pdf',data:part.data}},{type:'text',text:instruction}]}]};
+      r=await fetchWithTimeout(base+'/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},body:JSON.stringify(body)},120000);
+    }else if(c.proto==='oai' && /openai\.com/i.test(base)){
+      body={model,input:[{role:'user',content:[{type:'input_file',filename:pdfContext.fileName,file_data:pdfContext.dataUri},{type:'input_text',text:instruction}]}],max_output_tokens:5000};
+      r=await fetchWithTimeout(base+'/responses',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+key},body:JSON.stringify(body)},120000);
+    }else{
+      body={model,temperature:0.1,max_tokens:5000,messages:[{role:'system',content:'只输出严格 JSON。'},{role:'user',content:[{type:'file',file:{filename:pdfContext.fileName,file_data:pdfContext.dataUri}},{type:'text',text:instruction}]}]};
+      if(parseProviderKey()==='ark') body.thinking={type:'disabled'};
+      r=await postJSON(base,'/chat/completions',body,key);
+    }
   }
   const raw=await r.text(); if(!r.ok) throw new Error(friendlyHttp(r.status,raw));
   return extractJsonObject(parseResponseText(JSON.parse(raw)));
@@ -799,10 +844,12 @@ function setParseStatus(state){
 }
 async function selectPdfContext(){
   if(!pdfContext || $('#contentMode').value==='free') return;
-  const seq=++pdfIntentSeq, mode=$('#contentMode').value;
+  const seq=++pdfIntentSeq, mode=$('#contentMode').value, direct=parserAcceptsPdf();
   setParseStatus('loading');
-  $('#contentModeHint').textContent='正在发送 PDF，模型将按绘图意图提取相关章节并总结…';
-  $('#pdfExtractionMeta').textContent=`解析模型：${parserModel()||'未选择'} · 使用步骤一的 API 配置`;
+  $('#contentModeHint').textContent = direct
+    ? '正在发送 PDF，模型将按绘图意图提取相关章节并总结…'
+    : '正在本机提取 PDF 文本，再交给解析模型按绘图意图归纳…';
+  $('#pdfExtractionMeta').textContent=`解析模型：${parserModel()||'未选择'} · ${direct?'直接发送 PDF':'本机提取文本后发送（最多前 12 页）'}`;
   try{
     const result=await callPdfParser(); if(seq!==pdfIntentSeq) return;
     renderPdfSummary(result);
@@ -812,8 +859,12 @@ async function selectPdfContext(){
   }catch(err){
     if(seq!==pdfIntentSeq) return;
     setParseStatus('error');
-    $('#contentModeHint').textContent='模型解析失败；请更换支持 PDF / 文档输入的模型，或改用自由输入。';
-    $('#pdfExtractionMeta').textContent='未生成本地兜底文本，避免把低质量抽取误当成模型结果。';
+    $('#contentModeHint').textContent = parserAcceptsPdf()
+      ? '模型解析失败；请更换支持 PDF / 文档输入的模型，或改用自由输入。'
+      : '模型解析失败；请检查步骤一的解析服务商 / Key / 模型，或改用自由输入粘贴正文。';
+    $('#pdfExtractionMeta').textContent = parserAcceptsPdf()
+      ? '未生成本地兜底文本，避免把低质量抽取误当成模型结果。'
+      : `本机提取的文本：${(pdfContext.text||'').length} 字。`;
     showErr('PDF 模型解析失败：'+err.message);
   }
 }

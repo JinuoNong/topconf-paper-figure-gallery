@@ -1,7 +1,7 @@
 {
   "updated": "2026-09-30",
   "dataVersion": "2026-09-25-3",
-  "note": "FigureForge 模型清单：页面每次打开自动拉取本文件（cache-bust，推荐名单），并尝试实时调用服务商 /models（你的账号已开通模型）。模型 ID 已按各服务商官方文档核实（2026-09）。注意：火山方舟 /models 查询端点未开放浏览器跨域（OPTIONS 404），方舟以本托管清单为准，新模型发布后更新本文件用户打开即见；生成端点（chat/images）浏览器可直连。Anthropic 无模型列表接口，混元 / Anthropic 官方接口不开放浏览器跨域，这两家请勾选中转并填入 OpenAI 兼容中转地址。",
+  "note": "FigureForge 模型清单：页面每次打开自动拉取本文件（cache-bust，推荐名单），并尝试实时调用服务商 /models（你的账号已开通模型）。模型 ID 已按各服务商官方文档核实（2026-09）。注意：火山方舟 /models 查询端点未开放浏览器跨域（OPTIONS 404），方舟以本托管清单为准，新模型发布后更新本文件用户打开即见；生成端点（chat/images）浏览器可直连。Anthropic 无模型列表接口，混元 / Anthropic 官方接口不开放浏览器跨域，这两家请勾选中转并填入 OpenAI 兼容中转地址。服务商可选能力位：doc=false 表示该服务商的接口不接受 PDF 文件本身，页面会用内置 pdf.js 在本机取出文字再发送（纯文本模型走这条路；缺省视为接受 PDF）；json=true 表示该服务商支持 response_format=json_object（实测能显著减少非法 JSON）。",
   "providers": {
     "ark": {
       "label": "火山方舟 Ark", "base": "https://ark.cn-beijing.volces.com/api/v3",
@@ -26,7 +26,7 @@
     },
     "ds": {
       "label": "DeepSeek", "base": "https://api.deepseek.com",
-      "proto": "oai", "cors": true,
+      "proto": "oai", "cors": true, "doc": false, "json": true,
       "chat": ["deepseek-v4-pro", "deepseek-flash"],
       "vision": [], "image": []
     },
